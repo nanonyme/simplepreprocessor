@@ -39,6 +39,21 @@ class TestSimplecpreprocessor(unittest.TestCase):
         expected_list = ["FOO\n"]
         self.run_case(input_list, expected_list)
 
+    def test_extra_endif_causes_error(self):
+        input_list = ["#endif\n"]
+        with self.assertRaises(simplecpreprocessor.ParseError):
+            list(simplecpreprocessor.preprocess(input_list))
+
+    def test_ifdef_left_open_causes_error(self):
+        input_list = ["#ifdef FOO\n"]
+        with self.assertRaises(simplecpreprocessor.ParseError):
+            list(simplecpreprocessor.preprocess(input_list))
+
+    def test_ifndef_left_open_causes_error(self):
+        input_list = ["#ifndef FOO\n"]
+        with self.assertRaises(simplecpreprocessor.ParseError):
+            list(simplecpreprocessor.preprocess(input_list))
+
     def test_unexpected_macro_gives_parse_error(self):
         input_list = ["#something_unsupported foo bar\n"]
         with self.assertRaises(simplecpreprocessor.ParseError):

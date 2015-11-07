@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 def calculate_ignore(defines, constraints):
     defines = set(defines)
-    for key, value in constraints:
+    for key, value, _ in constraints:
         if value and key not in defines:
             return True
         if not value and key in defines:
@@ -27,16 +27,16 @@ def preprocess(iterable):
         line = line.rstrip("\r\n").rstrip("\n")
         if line == "#endif":
             if not constraints:
-                raise Exception("Unexpected #endif on line %s" % line_num)
+                raise ParseError("Unexpected #endif on line %s" % line_num)
             constraints.pop()
             ignore = calculate_ignore(defines, constraints)
         elif line.startswith("#ifdef"):
             _, define = line.split(" ")
-            constraints.append((define, True))
+            constraints.append((define, True, line_num))
             ignore = calculate_ignore(defines, constraints)
         elif line.startswith("#ifndef"):
             _, define = line.split(" ")
-            constraints.append((define, False))
+            constraints.append((define, False, line_num))
             ignore = calculate_ignore(defines, constraints)
         elif not ignore:
             if line.startswith("#define"):
@@ -59,3 +59,9 @@ def preprocess(iterable):
                 for key, value in defines.items():
                     line = line.replace(key, value)
                 yield line + "\n"
+    if constraints:
+        name, constraint_type, line_num = constraints[-1]
+        if constraint_type:
+            raise ParseError("#ifdef %s from line %s left open" % (name, line_num))
+        else:
+            raise ParseError("#ifndef %s from line %s left open" % (name, line_num))
