@@ -1,10 +1,10 @@
 import unittest
-import simplepreprocessor
+import simplecpreprocessor
 
 
-class TestSimplePreprocessor(unittest.TestCase):
+class TestSimplecpreprocessor(unittest.TestCase):
     def run_case(self, input_list, expected_list):
-        output_list = list(simplepreprocessor.preprocess(input_list))
+        output_list = list(simplecpreprocessor.preprocess(input_list))
         self.assertEqual(output_list, expected_list)
 
     def test_define(self):
@@ -29,8 +29,8 @@ class TestSimplePreprocessor(unittest.TestCase):
 
     def test_unexpected_macro_gives_parse_error(self):
         input_list = ["#something_unsupported foo bar\n"]
-        with self.assertRaises(simplepreprocessor.ParseError):
-            list(simplepreprocessor.preprocess(input_list))
+        with self.assertRaises(simplecpreprocessor.ParseError):
+            list(simplecpreprocessor.preprocess(input_list))
 
     def test_ifndef_unfulfilled_define_ignored(self):
         input_list = ["#define FOO\n", "#ifndef FOO\n", "#define BAR 1\n", "#endif\n", "BAR\n"]
