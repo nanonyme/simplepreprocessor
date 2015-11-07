@@ -1,0 +1,5 @@
+language: python
+python:
+ - "2.6"
+ - "3.4"
+script: python -m unittest test_simplecpreprocessor
