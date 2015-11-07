@@ -14,4 +14,6 @@ Gotchas
 
 Supported macros: ifdef, ifndef, define, undef
 
-Limitations: only single-line variant of define is supported
+Limitations:
+ * only single-line variant of define is supported
+ * indirect self-reference not supported. avoid this, result is undefined in simplecpreprocessor
