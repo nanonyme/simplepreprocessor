@@ -12,9 +12,16 @@ class TestSimplecpreprocessor(unittest.TestCase):
         expected_list = ["1\n"]
         self.run_case(input_list, expected_list)
 
-    def test_define_self_referential(self):
+    def test_define_simple_self_referential(self):
         input_list = ["#define FOO FOO\n", "FOO\n"]
         expected_list = ["FOO\n"]
+        self.run_case(input_list, expected_list)
+
+    def test_define_indirect_self_reference(self):
+        input_list = ["#define x (4 + y)\n",
+                      "#define y (2 * x)\n",
+                      "x\n", "y\n"]
+        expected_list = ["(4 + (2 * x))\n", "(2 * (4 + y)\n"]
         self.run_case(input_list, expected_list)
 
     def test_blank_define(self):

@@ -17,3 +17,4 @@ Supported macros: ifdef, ifndef, define, undef
 Limitations:
  * only single-line variant of define is supported
  * indirect self-reference not supported. avoid this, result is undefined in simplecpreprocessor
+ * no magic with the semicolon. if you want a semicolon in the result, write it in your macro
