@@ -44,6 +44,10 @@ def preprocess(iterable):
                 if len(define) == 1:
                     defines[define[0]] = ""
                 else:
+                    for candidate in defines:
+                        if candidate in define[1]:
+                            r = "Indirect self-reference detected #define %s %s, line %s"
+                            raise ParseError(r % (define[0], define[1], line_num))
                     defines[define[0]] = define[1]
                 ignore = calculate_ignore(defines, constraints)
             elif line.startswith("#undef"):

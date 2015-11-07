@@ -17,6 +17,7 @@ class TestSimplecpreprocessor(unittest.TestCase):
         expected_list = ["FOO\n"]
         self.run_case(input_list, expected_list)
 
+    @unittest.expectedFailure
     def test_define_indirect_self_reference(self):
         input_list = ["#define x (4 + y)\n",
                       "#define y (2 * x)\n",
