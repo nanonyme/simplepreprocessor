@@ -12,6 +12,11 @@ class TestSimplecpreprocessor(unittest.TestCase):
         expected_list = ["1\n"]
         self.run_case(input_list, expected_list)
 
+    def test_define_self_referential(self):
+        input_list = ["#define FOO FOO\n", "FOO\n"]
+        expected_list = ["FOO\n"]
+        self.run_case(input_list, expected_list)
+
     def test_blank_define(self):
         input_list = ["#define FOO\n", "FOO\n"]
         expected_list = ["\n"]
