@@ -6,7 +6,7 @@ Usage
 import simplecpreprocessor
 
 There will be one function called preprocess. It can either be called with a file object (the assumed way) or a sequence
-of lines. Line endings are normalized to unix.
+of lines. Line endings are by default normalized to unix but a parameter can be given to customize this behaviour.
 
 
 Travis
