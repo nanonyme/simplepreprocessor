@@ -16,7 +16,7 @@ class ParseError(Exception):
     pass
 
 
-def preprocess(iterable):
+def preprocess(iterable, line_ending="\n"):
     r"""
     This preprocessor yields lines with \n at the end
     """
@@ -62,7 +62,7 @@ def preprocess(iterable):
             else:
                 for key, value in defines.items():
                     line = line.replace(key, value)
-                yield line + "\n"
+                yield line + line_ending
     if constraints:
         name, constraint_type, line_num = constraints[-1]
         if constraint_type:

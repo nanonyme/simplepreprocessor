@@ -3,8 +3,12 @@ import simplecpreprocessor
 
 
 class TestSimplecpreprocessor(unittest.TestCase):
-    def run_case(self, input_list, expected_list):
-        output_list = list(simplecpreprocessor.preprocess(input_list))
+    def run_case(self, input_list, expected_list, line_ending=None):
+        if line_ending is not None:
+            output_list = list(simplecpreprocessor.preprocess(input_list,
+                                                              line_ending))
+        else:
+            output_list = list(simplecpreprocessor.preprocess(input_list))
         self.assertEqual(output_list, expected_list)
 
     def test_define(self):
@@ -84,3 +88,8 @@ class TestSimplecpreprocessor(unittest.TestCase):
         input_list = ["foo\r\n", "bar\r\n"]
         expected_list = ["foo\n", "bar\n"]
         self.run_case(input_list, expected_list)
+
+    def test_lines_normalize_custom(self):
+        input_list = ["foo\n", "bar\n"]
+        expected_list = ["foo\r\n", "bar\r\n"]
+        self.run_case(input_list, expected_list, "\r\n")
