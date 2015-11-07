@@ -21,7 +21,6 @@ def preprocess(iterable):
     This preprocessor yields lines with \n at the end
     """
     defines = {}
-    defined = object()
     constraints = []
     ignore = calculate_ignore(defines, constraints)
     for line_num, line in enumerate(iterable):
@@ -43,7 +42,7 @@ def preprocess(iterable):
             if line.startswith("#define"):
                 define = line.split(" ", 2)[1:]
                 if len(define) == 1:
-                    defines[define[0]] = defined
+                    defines[define[0]] = ""
                 else:
                     defines[define[0]] = define[1]
                 ignore = calculate_ignore(defines, constraints)
@@ -58,6 +57,5 @@ def preprocess(iterable):
                 raise ParseError("%s contains unsupported macro" % line)
             else:
                 for key, value in defines.items():
-                    if value is not defined:
-                        line = line.replace(key, value)
+                    line = line.replace(key, value)
                 yield line + "\n"
