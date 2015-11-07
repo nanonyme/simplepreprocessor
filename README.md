@@ -9,6 +9,10 @@ There will be one function called preprocess. It can either be called with a fil
 of lines. Line endings are normalized to unix.
 
 
+Travis
+-----------
+![Latest travis build](https://travis-ci.org/nanonyme/simplecpreprocessor.svg?branch=master)
+
 Gotchas
 ---------
 
