@@ -3,12 +3,8 @@ import simplecpreprocessor
 
 
 class TestSimpleCPreprocessor(unittest.TestCase):
-    def run_case(self, input_list, expected_list, line_ending=None):
-        if line_ending is not None:
-            output_list = list(simplecpreprocessor.preprocess(input_list,
-                                                              line_ending))
-        else:
-            output_list = list(simplecpreprocessor.preprocess(input_list))
+    def run_case(self, input_list, expected_list):
+        output_list = list(simplecpreprocessor.preprocess(input_list))
         self.assertEqual(output_list, expected_list)
 
     def test_define(self):
@@ -70,9 +66,11 @@ class TestSimpleCPreprocessor(unittest.TestCase):
             list(simplecpreprocessor.preprocess(input_list))
 
     def test_ifndef_unfulfilled_define_ignored(self):
-        input_list = ["#define FOO\n", "#ifndef FOO\n", "#define BAR 1\n", "#endif\n", "BAR\n"]
+        input_list = ["#define FOO\n", "#ifndef FOO\n", "#define BAR 1\n",
+                      "#endif\n", "BAR\n"]
         expected_list = ["BAR\n"]
-        self.run_case(input_list, expected_list)                                
+        self.run_case(input_list, expected_list)
+
 
     def test_ifdef_unfulfilled_define_ignored(self):
         input_list = ["#ifdef FOO\n", "#define BAR 1\n", "#endif\n", "BAR\n"]
@@ -85,7 +83,8 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         self.run_case(input_list, expected_list)
 
     def test_fulfilled_ifdef_define_allowed(self):
-        input_list = ["#define FOO", "#ifdef FOO\n", "#define BAR 1\n", "#endif\n", "BAR\n"]
+        input_list = ["#define FOO", "#ifdef FOO\n", "#define BAR 1\n",
+                      "#endif\n", "BAR\n"]
         expected_list = ["1\n"]
         self.run_case(input_list, expected_list)
                                 
@@ -97,4 +96,17 @@ class TestSimpleCPreprocessor(unittest.TestCase):
     def test_lines_normalize_custom(self):
         input_list = ["foo\n", "bar\n"]
         expected_list = ["foo\r\n", "bar\r\n"]
-        self.run_case(input_list, expected_list, "\r\n")
+        output_list = list(simplecpreprocessor.preprocess(input_list,
+                                                          line_ending="\r\n"))
+        self.assertEqual(output_list, expected_list)
+
+    def test_include_left_alone_by_default(self):
+        input_list = ["#include <stdio.h>\n"]
+        self.run_case(input_list, input_list)
+
+    def test_include_removed_if_instructed(self):
+        input_list = ["#include <stdio.h>\n"]
+        expected_list = []
+        output_list = list(simplecpreprocessor.preprocess(input_list,
+                                                          strip_include=True))
+        self.assertEqual(output_list, expected_list)
