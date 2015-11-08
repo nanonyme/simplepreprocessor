@@ -19,6 +19,6 @@ Gotchas
 Supported macros: ifdef, ifndef, define, undef
 
 Limitations:
- * only single-line variant of define is supported
+ * multiline defines supported but whitespace rule may not be 1:1 with real preprocessors
  * indirect self-reference not supported. this now raises an error. remove when commented about
  * no magic with the semicolon. if you want a semicolon in the result, write it in your macro

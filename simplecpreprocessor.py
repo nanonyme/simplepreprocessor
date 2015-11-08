@@ -25,7 +25,7 @@ def verify_no_multiline_define(multiline_define):
 def process_define(line, line_num, multiline_define, defines):
     verify_no_multiline_define(multiline_define)
     if line.endswith("\\"):
-        return line, line_num
+        return line[:-1].rstrip(" \t"), line_num
     define = line.split(" ", 2)[1:]
     if len(define) == 1:
         defines[define[0]] = ""
@@ -35,6 +35,7 @@ def process_define(line, line_num, multiline_define, defines):
                 r = "Indirect self-reference detected #define %s %s, line %s"
                 raise ParseError(r % (define[0], define[1], line_num))
         defines[define[0]] = define[1]
+    return None
 
 def process_endif(line, line_num, multiline_define, constraints):
     verify_no_multiline_define(multiline_define)
@@ -54,10 +55,17 @@ def process_undef(line, multiline_define, defines):
         del defines[undefine]
     except KeyError:
         pass
-    
+
+def process_multiline_define(line, line_num, multiline_define, defines):
+    define, old_line_num = multiline_define
+    define = "%s %s" % (define, line.lstrip(" \t"))
+    if define.endswith("\\"):
+        return define[:-1], old_line_num
+    else:
+        return process_define(define, old_line_num, None, defines)
 
 
-def preprocess(iterable, line_ending="\n"):
+def preprocess(iterable, line_ending="\n", strip_include=False):
     r"""
     This preprocessor yields lines with \n at the end
     """
@@ -66,7 +74,7 @@ def preprocess(iterable, line_ending="\n"):
     ignore = calculate_ignore(defines, constraints)
     multiline_define = None
     for line_num, line in enumerate(iterable):
-        line = line.rstrip("\r\n").rstrip("\n")
+        line = line.rstrip("\r\n \t").rstrip("\n")
         if line == "#endif":
             process_endif(line, line_num, multiline_define, constraints)
             ignore = calculate_ignore(defines, constraints)
@@ -83,12 +91,19 @@ def preprocess(iterable, line_ending="\n"):
             elif line.startswith("#undef"):
                 process_undef(line, multiline_define, defines)
                 ignore = calculate_ignore(defines, constraints)
+            elif line.startswith("#include"):
+                if not strip_include:
+                    yield line + line_ending
             elif line.startswith("#"):
                 raise ParseError("%s contains unsupported macro" % line)
             else:
-                for key, value in defines.items():
-                    line = line.replace(key, value)
-                yield line + line_ending
+                if multiline_define:
+                    multiline_define = process_multiline_define(line, line_num, multiline_define,
+                                                                defines)
+                else:
+                    for key, value in defines.items():
+                        line = line.replace(key, value)
+                    yield line + line_ending
     if constraints:
         name, constraint_type, line_num = constraints[-1]
         if constraint_type:
