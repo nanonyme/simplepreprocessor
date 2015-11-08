@@ -2,7 +2,7 @@ import unittest
 import simplecpreprocessor
 
 
-class TestSimplecpreprocessor(unittest.TestCase):
+class TestSimpleCPreprocessor(unittest.TestCase):
     def run_case(self, input_list, expected_list, line_ending=None):
         if line_ending is not None:
             output_list = list(simplecpreprocessor.preprocess(input_list,
