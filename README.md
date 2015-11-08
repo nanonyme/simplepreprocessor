@@ -19,6 +19,11 @@ Gotchas
 Supported macros: ifdef, ifndef, define, undef
 
 Limitations:
- * multiline defines supported but whitespace handling may not be 1:1 with real preprocessors. trailing whitespace is removed, indentation from first line is removed
- * indirect self-reference not supported. this now raises an error. remove when commented about
- * no magic with the semicolon. if you want a semicolon in the result, write it in your macro
+ * multiline defines supported but whitespace handling may not be 1:1 with
+   real preprocessors. trailing whitespace is removed, indentation from first
+   line is removed
+ * indirect self-reference not supported. this now raises an error. remove
+   when commented about
+ * no magic with the semicolon. if you want a semicolon in the result, write
+   it in your macro
+ * no includes as for now
