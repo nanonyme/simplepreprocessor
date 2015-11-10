@@ -8,7 +8,7 @@ setup(
     description = "Simple C preprocessor for usage eg before CFFI",
     keywords = "python c preprocessor",
     license = "BSD",
-    url = "http://packages.python.org/simplepreprocessor",
+    url = "https://github.com/nanonyme/simplecpreprocessor",
     py_modules=["simplepreprocessor"],
     classifiers=[
         "Development Status :: 4 - Beta",
