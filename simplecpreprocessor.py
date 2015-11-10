@@ -1,20 +1,44 @@
 import logging
 from collections import OrderedDict
+import os.path
+import errno
 
 logger = logging.getLogger(__name__)
 
 class ParseError(Exception):
     pass
 
+
+class HeaderLocator(object):
+    def __init__(self, include_paths):
+        self.include_paths = include_paths
+
+    def locate_local_header(self, current_header, include_header):
+        ret = os.path.join(os.path.dirname(root_dir), include_header)
+        if os.path.isfile(ret):
+            return ret
+        else:
+            return None
+
+    def locate_header(include_header):
+        for include_path in include_paths:
+            ret = os.path.join(include_path, include_header)
+            if os.path.isfile(ret):
+                return ret
+        return None
+
+    def open_file(header_path):
+        return open(header_path)
+
+
 class Preprocessor(object):
-    def __init__(self, line_ending, include_paths=()):
+    def __init__(self, line_ending, include_paths=(), header_locator=HeaderLocator):
         self.defines = {}
         self.constraints = []
         self.ignore = False
         self.ml_define = None
         self.line_ending = line_ending
-        self.include_paths = include_paths
-
+        self.locator = HeaderLocator(include_paths)
 
     def verify_no_ml_define(self):
         if self.ml_define:
@@ -84,6 +108,25 @@ class Preprocessor(object):
         for key, value in self.defines.items():
             line = line.replace(key, value)
         return line + self.line_ending
+
+    def process_include(self, line, line_num):
+        _, item = line.split(" ", 1)
+        if item.startswith("<") and item.endswith(">"):
+            header = item.strip("<>")
+            header_file = self.header_locator.locate_header(header)
+            with self.locator.open_file(header_file) as f:
+                for line in self.preprocess(f):
+                    yield line
+        elif item.starswith('"') and item.endswith('"'):
+            header = item.strip('"')
+            header_file = self.locator.locate_local_header(self.f_obj.name,
+                                                           header)
+            with self.locator.open_file(header_file) as f:
+                for line in self.preprocess(f):
+                    yield line
+        else:
+            raise ParseError("Invalid macro %s on line %s" % (line,
+                                                              line_num))
         
 
     def preprocess(self, f_object, depth=0):
@@ -105,19 +148,16 @@ class Preprocessor(object):
                 self.process_ml_define(line, line_num)
                 self.calculate_ignore()
             else:
-                yield self.process_source_line(line, line_num)                
+                yield self.process_source_line(line, line_num)
 
         if depth == 0 and self.constraints:
             name, constraint_type, line_num = self.constraints[-1]
             if constraint_type:
                 fmt = "#ifdef %s from line %s left open"
-                raise ParseError("#ifdef %s from line %s left open" % (name,
-                                                                       line_num)
-                                 )
             else:
-                raise ParseError("#ifndef %s from line %s left open" % (name,
-                                                                        line_num)
-                                 )
+                fmt = "#ifndef %s from line %s left open"
+            raise ParseError(fmt % (name, line_num))
+
 
     def calculate_ignore(self):
         defines = set(self.defines)
@@ -131,10 +171,11 @@ class Preprocessor(object):
         else:
             self.ignore = False
 
-def preprocess(f_object, line_ending="\n", includes=()):
+def preprocess(f_object, line_ending="\n", include_paths=(),
+               header_locator=HeaderLocator):
     r"""
     This preprocessor yields lines with \n at the end
     """
-    preprocessor = Preprocessor(line_ending, includes)
+    preprocessor = Preprocessor(line_ending, include_paths, header_locator)
     return preprocessor.preprocess(f_object)
 
