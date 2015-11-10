@@ -139,9 +139,10 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                                                           line_ending="\r\n"))
         self.assertEqual(output_list, expected_list)
 
-    def test_include_local_file(self):
-        f_obj = FakeFile("header.h", ['#include "other.h"\n'])
-        handler = FakeHandler({"other.h": ["1\n"]})
+    def test_include_local_file_with_subdirectory(self):
+        other_header = os.path.join("somedirectory", "other.h")
+        f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
+        handler = FakeHandler({other_header: ["1\n"]})
         output_list = list(simplecpreprocessor.preprocess(f_obj,
                                                           header_handler=handler))
         self.assertEqual(output_list, ["1\n"])
@@ -150,6 +151,17 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         f_obj = FakeFile("header.h", ['#include <other.h>\n'])
         handler = FakeHandler({os.path.join("subdirectory", "other.h"): ["1\n"]})
         include_paths = ["subdirectory"]
+        output_list = list(simplecpreprocessor.preprocess(f_obj,
+                                                          include_paths=include_paths,
+                                                          header_handler=handler))
+        self.assertEqual(output_list, ["1\n"])
+
+    def test_include_with_path_list_with_subdirectory(self):
+        header_file = os.path.join("nested", "other.h")
+        include_path = "somedir"
+        f_obj = FakeFile("header.h", ['#include <%s>\n' % header_file])
+        handler = FakeHandler({os.path.join(include_path, header_file): ["1\n"]})
+        include_paths = [include_path]
         output_list = list(simplecpreprocessor.preprocess(f_obj,
                                                           include_paths=include_paths,
                                                           header_handler=handler))
