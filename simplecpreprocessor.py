@@ -122,16 +122,22 @@ class Preprocessor(object):
 
     def process_include(self, line, line_num):
         _, item = line.split(" ", 1)
+        s = "%s on line %s includes a file that can't be found" % (line, line_num)
         if item.startswith("<") and item.endswith(">"):
             header = item.strip("<>")
-            with self.headers.open_header(header) as f:
+            f = self.headers.open_header(header)
+            if f is None:
+                raise ParseError(s)
+            with f:
                 for line in self.preprocess(f):
                     yield line
         elif item.startswith('"') and item.endswith('"'):
             current = self.header_stack[-1]
             header = item.strip('"')
-            with self.headers.open_local_header(current.name,
-                                                header) as f:
+            f = self.headers.open_local_header(current.name, header)
+            if f is None:
+                raise ParseError(s)
+            with f:
                 for line in self.preprocess(f):
                     yield line
         else:

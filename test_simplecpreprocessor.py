@@ -167,3 +167,19 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                                                           header_handler=handler))
         self.assertEqual(output_list, ["1\n"])
 
+    def test_include_missing_local_file(self):
+        other_header = os.path.join("somedirectory", "other.h")
+        f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
+        handler = FakeHandler({})
+        with self.assertRaises(simplecpreprocessor.ParseError):
+            output_list = list(simplecpreprocessor.preprocess(f_obj,
+                                                              header_handler=handler))
+
+    def test_include_missing_local_file(self):
+        other_header = os.path.join("somedirectory", "other.h")
+        f_obj = FakeFile("header.h", ['#include <%s>\n' % other_header])
+        handler = FakeHandler({})
+        with self.assertRaises(simplecpreprocessor.ParseError):
+            output_list = list(simplecpreprocessor.preprocess(f_obj,
+                                                              header_handler=handler))
+                                                
