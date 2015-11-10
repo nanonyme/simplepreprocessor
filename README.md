@@ -17,7 +17,7 @@ Travis
 Gotchas
 ---------
 
-Supported macros: ifdef, ifndef, define, undef
+Supported macros: ifdef, ifndef, define, undef, include
 
 Limitations:
  * multiline defines supported but whitespace handling may not be 1:1 with
@@ -27,4 +27,3 @@ Limitations:
    when commented about
  * no magic with the semicolon. if you want a semicolon in the result, write
    it in your macro
- * no includes as for now
