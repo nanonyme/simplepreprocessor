@@ -9,36 +9,47 @@ class ParseError(Exception):
     pass
 
 
-class HeaderLocator(object):
+class HeaderHandler(object):
     def __init__(self, include_paths):
         self.include_paths = include_paths
 
-    def locate_local_header(self, current_header, include_header):
+    def open_local_header(self, current_header, include_header):
         ret = os.path.join(os.path.dirname(root_dir), include_header)
-        if os.path.isfile(ret):
-            return ret
-        else:
+        try:
+            f = open(ret)
+        except IOError as e:
             return None
+        else:
+            return ret
 
-    def locate_header(include_header):
+    def add_include_paths(self, include_paths):
+        self.include_paths.extend(include_paths)
+
+    def open_header(include_header):
         for include_path in include_paths:
             ret = os.path.join(include_path, include_header)
-            if os.path.isfile(ret):
-                return ret
+            try:
+                f = open(ret)
+            except IOError as e:
+                continue
+            else:
+                return f
         return None
-
-    def open_file(header_path):
-        return open(header_path)
 
 
 class Preprocessor(object):
-    def __init__(self, line_ending, include_paths=(), header_locator=HeaderLocator):
+    def __init__(self, line_ending, include_paths=(), header_handler=None):
         self.defines = {}
         self.constraints = []
         self.ignore = False
         self.ml_define = None
         self.line_ending = line_ending
-        self.locator = HeaderLocator(include_paths)
+        self.header_stack = []
+        if header_handler is None:
+            self.headers = HeaderHandler(include_paths)
+        else:
+            self.headers = header_handler
+            self.headers.add_include_paths(include_paths)
 
     def verify_no_ml_define(self):
         if self.ml_define:
@@ -113,15 +124,14 @@ class Preprocessor(object):
         _, item = line.split(" ", 1)
         if item.startswith("<") and item.endswith(">"):
             header = item.strip("<>")
-            header_file = self.header_locator.locate_header(header)
-            with self.locator.open_file(header_file) as f:
+            with self.headers.open_header(header) as f:
                 for line in self.preprocess(f):
                     yield line
-        elif item.starswith('"') and item.endswith('"'):
+        elif item.startswith('"') and item.endswith('"'):
+            current = self.header_stack[-1]
             header = item.strip('"')
-            header_file = self.locator.locate_local_header(self.f_obj.name,
-                                                           header)
-            with self.locator.open_file(header_file) as f:
+            with self.headers.open_local_header(current.name,
+                                                header) as f:
                 for line in self.preprocess(f):
                     yield line
         else:
@@ -130,6 +140,7 @@ class Preprocessor(object):
         
 
     def preprocess(self, f_object, depth=0):
+        self.header_stack.append(f_object)
         for line_num, line in enumerate(f_object):
             line = line.rstrip("\r\n")
             first_item = line.split(" ", 1)[0]
@@ -149,8 +160,8 @@ class Preprocessor(object):
                 self.calculate_ignore()
             else:
                 yield self.process_source_line(line, line_num)
-
-        if depth == 0 and self.constraints:
+        self.header_stack.pop()
+        if not self.header_stack and self.constraints:
             name, constraint_type, line_num = self.constraints[-1]
             if constraint_type:
                 fmt = "#ifdef %s from line %s left open"
@@ -172,10 +183,10 @@ class Preprocessor(object):
             self.ignore = False
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
-               header_locator=HeaderLocator):
+               header_handler=None):
     r"""
     This preprocessor yields lines with \n at the end
     """
-    preprocessor = Preprocessor(line_ending, include_paths, header_locator)
+    preprocessor = Preprocessor(line_ending, include_paths, header_handler)
     return preprocessor.preprocess(f_object)
 

@@ -1,5 +1,6 @@
 import unittest
 import simplecpreprocessor
+import os.path
 
 class FakeFile(object):
     def __init__(self, name, contents):
@@ -9,6 +10,35 @@ class FakeFile(object):
     def __iter__(self):
         for line in self.contents:
             yield line
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass
+
+class FakeHandler(object):
+    def __init__(self, header_mapping):
+        self.header_mapping = header_mapping
+        self.include_paths = []
+
+    def add_include_paths(self, include_paths):
+        self.include_paths.extend(include_paths)
+
+    def open_header(self, header):
+        for include_path in self.include_paths:
+            header_file = os.path.join(include_path, header)
+            if header_file in self.header_mapping:
+                return FakeFile(header_file,
+                                self.header_mapping[header_file])
+
+    def open_local_header(self, current_header, header):
+        header_file = os.path.join(os.path.dirname(current_header),
+                                   header)
+        if header_file in self.header_mapping:
+            return FakeFile(header_file,
+                            self.header_mapping[header_file])     
+
 
 
 class TestSimpleCPreprocessor(unittest.TestCase):
@@ -109,11 +139,19 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                                                           line_ending="\r\n"))
         self.assertEqual(output_list, expected_list)
 
-    @unittest.expectedFailure
     def test_include_local_file(self):
-        self.fail('FIXME: #include "foo.h"')
+        f_obj = FakeFile("header.h", ['#include "other.h"\n'])
+        handler = FakeHandler({"other.h": ["1\n"]})
+        output_list = list(simplecpreprocessor.preprocess(f_obj,
+                                                          header_handler=handler))
+        self.assertEqual(output_list, ["1\n"])
 
-    @unittest.expectedFailure
     def test_include_with_path_list(self):
-        self.fail('FIXME: #include <foo.h>')
+        f_obj = FakeFile("header.h", ['#include <other.h>\n'])
+        handler = FakeHandler({os.path.join("subdirectory", "other.h"): ["1\n"]})
+        include_paths = ["subdirectory"]
+        output_list = list(simplecpreprocessor.preprocess(f_obj,
+                                                          include_paths=include_paths,
+                                                          header_handler=handler))
+        self.assertEqual(output_list, ["1\n"])
 
