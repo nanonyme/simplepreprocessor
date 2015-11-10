@@ -101,15 +101,10 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         self.assertEqual(output_list, expected_list)
 
     @unittest.expectedFailure
-    def test_include_raises_parse_error(self):
-        # FIXME: This is a pretty bad test. Fix the test so it's possible to be
-        # made passing through implementing relevant functionality
-        input_list = ['#include "foo.h"\n']
-        self.run_case(input_list, input_list)
+    def test_include_local_file(self):
+        self.fail('FIXME: #include "foo.h"')
 
-    def test_include_removed_if_instructed(self):
-        input_list = ["#include <stdio.h>\n"]
-        expected_list = []
-        output_list = list(simplecpreprocessor.preprocess(input_list,
-                                                          strip_include=True))
-        self.assertEqual(output_list, expected_list)
+    @unittest.expectedFailure
+    def test_include_with_path_list(self):
+        self.fail('FIXME: #include <foo.h>')
+
