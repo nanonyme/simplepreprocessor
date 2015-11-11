@@ -11,7 +11,7 @@ class ParseError(Exception):
 
 class HeaderHandler(object):
     def __init__(self, include_paths):
-        self.include_paths = include_paths
+        self.include_paths = list(include_paths)
 
     def open_local_header(self, current_header, include_header):
         ret = os.path.join(os.path.dirname(root_dir), include_header)
