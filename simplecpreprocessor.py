@@ -70,10 +70,10 @@ class Preprocessor(object):
                  platform_constants=None):
         self.defines = {}
         if platform_constants is None:
-            platform = platform.system()
-            if platform == "Windows":
+            system = platform.system()
+            if system == "Windows":
                 self.defines.update(calculate_windows_constants())
-            elif platform == "Linux":
+            elif system == "Linux":
                 self.defines.update(calculate_linux_constants())
             else:
                 raise ParseError("Unsupported platform %s" % platform)
