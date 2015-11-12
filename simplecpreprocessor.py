@@ -1,6 +1,7 @@
 import logging
 from collections import OrderedDict
 import os.path
+import platform
 import errno
 
 logger = logging.getLogger(__name__)
@@ -36,10 +37,48 @@ class HeaderHandler(object):
                 return f
         return None
 
+def calculate_windows_constants(bitness=None):
+    if bitness is None:
+        bitness, _ = platform.architecture()
+    constants = {
+        "WIN32": "WIN32", "_WIN64": "_WIN64"}
+    if bitness == "64bit":
+        constants["WIN64"] = "WIN64"
+        constants["_WIN64"] = "_WIN64"
+    elif not bitness == "32bit":
+        raise Exception("Unsupported bitness %s" % bitness)
+    return constants
+
+def calculate_linux_constants(bitness=None):
+    if bitness is None:
+        bitness, _ = platform.architecture()
+    constants = {
+        "__linux__": "__linux__"
+        }
+    if bitness == "32bit":
+        constants["__i386__"] = "__i386__"
+    elif bitness == "64bit":
+        constants["__x86_64__"] = "__x86_64"
+    else:
+        raise Exception("Unsupported bitness %s" % bitness)
+    return constants
+        
+
 
 class Preprocessor(object):
-    def __init__(self, line_ending, include_paths=(), header_handler=None):
+    def __init__(self, line_ending, include_paths=(), header_handler=None,
+                 platform_constants=None):
         self.defines = {}
+        if platform_constants is None:
+            platform = platform.system()
+            if platform == "Windows":
+                self.defines.update(calculate_windows_constants())
+            elif platform == "Linux":
+                self.defines.update(calculate_linux_constants())
+            else:
+                raise ParseError("Unsupported platform %s" % platform)
+        else:
+            self.defines.update(platform_constants)
         self.constraints = []
         self.ignore = False
         self.ml_define = None
@@ -54,7 +93,8 @@ class Preprocessor(object):
     def verify_no_ml_define(self):
         if self.ml_define:
             define, line_num = self.ml_define
-            s = "Error, expected multiline define %s on line %s to be continued"
+            s = ("Error, expected multiline define %s on "
+                 "line %s to be continued")
             raise ParseError(s % (define, line_num))
 
     def process_define(self, line, line_num):
@@ -69,7 +109,8 @@ class Preprocessor(object):
         else:
             for candidate in self.defines:
                 if candidate in define[1]:
-                    r = "Indirect self-reference detected #define %s %s, line %s"
+                    r = ("Indirect self-reference detected "
+                         "#define %s %s, line %s")
                     raise ParseError(r % (define[0], define[1], line_num))
             self.defines[define[0]] = define[1]
 
@@ -122,7 +163,8 @@ class Preprocessor(object):
 
     def process_include(self, line, line_num):
         _, item = line.split(" ", 1)
-        s = "%s on line %s includes a file that can't be found" % (line, line_num)
+        s = "%s on line %s includes a file that can't be found" % (line,
+                                                                   line_num)
         if item.startswith("<") and item.endswith(">"):
             header = item.strip("<>")
             f = self.headers.open_header(header)
@@ -189,10 +231,11 @@ class Preprocessor(object):
             self.ignore = False
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
-               header_handler=None):
+               header_handler=None, platform_constants=None):
     r"""
     This preprocessor yields lines with \n at the end
     """
-    preprocessor = Preprocessor(line_ending, include_paths, header_handler)
+    preprocessor = Preprocessor(line_ending, include_paths, header_handler,
+                                platform_constants)
     return preprocessor.preprocess(f_object)
 
