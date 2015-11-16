@@ -194,3 +194,10 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                                                      ignore_headers=["other.h"])
         self.assertEqual(list(output_list), [])
         
+    def test_platform_constants(self):
+        f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n', 'ODDPLATFORM\n', '#endif'])
+        platform_constants = {"ODDPLATFORM": "ODDPLATFORM"}
+        output_list = simplecpreprocessor.preprocess(f_obj,
+                                                     platform_constants=platform_constants)
+        self.assertEqual(list(output_list), ["ODDPLATFORM\n"])
+                        

@@ -62,8 +62,6 @@ def calculate_linux_constants(bitness=None):
     else:
         raise Exception("Unsupported bitness %s" % bitness)
     return constants
-        
-
 
 class Preprocessor(object):
     def __init__(self, line_ending, include_paths=(), header_handler=None,
