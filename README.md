@@ -19,6 +19,8 @@ Gotchas
 
 Supported macros: ifdef, ifndef, define, undef, include
 
+If using for FFI, you may want to ignore some system headers eg for types
+
 Limitations:
  * multiline defines supported but whitespace handling may not be 1:1 with
    real preprocessors. trailing whitespace is removed, indentation from first
