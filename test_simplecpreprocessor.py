@@ -183,3 +183,14 @@ class TestSimpleCPreprocessor(unittest.TestCase):
             output_list = list(simplecpreprocessor.preprocess(f_obj,
                                                               header_handler=handler))
                                                 
+
+    def test_ignore_include_path(self):
+        f_obj = FakeFile("header.h", ['#include <other.h>\n'])
+        handler = FakeHandler({os.path.join("subdirectory", "other.h"): ["1\n"]})
+        include_paths = ["subdirectory"]
+        output_list = simplecpreprocessor.preprocess(f_obj,
+                                                     include_paths=include_paths,
+                                                     header_handler=handler,
+                                                     ignore_headers=["other.h"])
+        self.assertEqual(list(output_list), [])
+        

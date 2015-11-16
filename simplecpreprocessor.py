@@ -67,8 +67,9 @@ def calculate_linux_constants(bitness=None):
 
 class Preprocessor(object):
     def __init__(self, line_ending, include_paths=(), header_handler=None,
-                 platform_constants=None):
+                 platform_constants=None, ignore_headers=()):
         self.defines = {}
+        self.ignore_headers = ignore_headers
         if platform_constants is None:
             system = platform.system()
             if system == "Windows":
@@ -167,21 +168,23 @@ class Preprocessor(object):
                                                                    line_num)
         if item.startswith("<") and item.endswith(">"):
             header = item.strip("<>")
-            f = self.headers.open_header(header)
-            if f is None:
-                raise ParseError(s)
-            with f:
-                for line in self.preprocess(f):
-                    yield line
+            if header not in self.ignore_headers:
+                f = self.headers.open_header(header)
+                if f is None:
+                    raise ParseError(s)
+                with f:
+                    for line in self.preprocess(f):
+                        yield line
         elif item.startswith('"') and item.endswith('"'):
             current = self.header_stack[-1]
             header = item.strip('"')
-            f = self.headers.open_local_header(current.name, header)
-            if f is None:
-                raise ParseError(s)
-            with f:
-                for line in self.preprocess(f):
-                    yield line
+            if header not in self.ignore_headers:
+                f = self.headers.open_local_header(current.name, header)
+                if f is None:
+                    raise ParseError(s)
+                with f:
+                    for line in self.preprocess(f):
+                        yield line
         else:
             raise ParseError("Invalid macro %s on line %s" % (line,
                                                               line_num))
@@ -231,11 +234,12 @@ class Preprocessor(object):
             self.ignore = False
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
-               header_handler=None, platform_constants=None):
+               header_handler=None, platform_constants=None,
+               ignore_headers=()):
     r"""
     This preprocessor yields lines with \n at the end
     """
     preprocessor = Preprocessor(line_ending, include_paths, header_handler,
-                                platform_constants)
+                                platform_constants, ignore_headers)
     return preprocessor.preprocess(f_object)
 
