@@ -105,24 +105,28 @@ class TestSimpleCPreprocessor(unittest.TestCase):
             list(simplecpreprocessor.preprocess(f_obj))
 
     def test_ifndef_unfulfilled_define_ignored(self):
-        f_obj = FakeFile("header.h", ["#define FOO\n", "#ifndef FOO\n", "#define BAR 1\n",
+        f_obj = FakeFile("header.h", ["#define FOO\n", "#ifndef FOO\n",
+                                      "#define BAR 1\n",
                                       "#endif\n", "BAR\n"])
         expected_list = ["BAR\n"]
         self.run_case(f_obj, expected_list)
 
 
     def test_ifdef_unfulfilled_define_ignored(self):
-        f_obj = FakeFile("header.h", ["#ifdef FOO\n", "#define BAR 1\n", "#endif\n", "BAR\n"])
+        f_obj = FakeFile("header.h", ["#ifdef FOO\n", "#define BAR 1\n",
+                                      "#endif\n", "BAR\n"])
         expected_list = ["BAR\n"]
         self.run_case(f_obj, expected_list)
 
     def test_ifndef_fulfilled_define_allowed(self):
-        f_obj = FakeFile("header.h", ["#ifndef FOO\n", "#define BAR 1\n", "#endif\n", "BAR\n"])
+        f_obj = FakeFile("header.h", ["#ifndef FOO\n", "#define BAR 1\n",
+                                      "#endif\n", "BAR\n"])
         expected_list = ["1\n"]
         self.run_case(f_obj, expected_list)
 
     def test_fulfilled_ifdef_define_allowed(self):
-        f_obj = FakeFile("header.h", ["#define FOO", "#ifdef FOO\n", "#define BAR 1\n",
+        f_obj = FakeFile("header.h", ["#define FOO", "#ifdef FOO\n",
+                                      "#define BAR 1\n",
                                       "#endif\n", "BAR\n"])
         expected_list = ["1\n"]
         self.run_case(f_obj, expected_list)
@@ -149,7 +153,8 @@ class TestSimpleCPreprocessor(unittest.TestCase):
 
     def test_include_with_path_list(self):
         f_obj = FakeFile("header.h", ['#include <other.h>\n'])
-        handler = FakeHandler({os.path.join("subdirectory", "other.h"): ["1\n"]})
+        handler = FakeHandler({os.path.join("subdirectory",
+                                            "other.h"): ["1\n"]})
         include_paths = ["subdirectory"]
         output_list = list(simplecpreprocessor.preprocess(f_obj,
                                                           include_paths=include_paths,
@@ -160,7 +165,8 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         header_file = os.path.join("nested", "other.h")
         include_path = "somedir"
         f_obj = FakeFile("header.h", ['#include <%s>\n' % header_file])
-        handler = FakeHandler({os.path.join(include_path, header_file): ["1\n"]})
+        handler = FakeHandler({os.path.join(include_path,
+                                            header_file): ["1\n"]})
         include_paths = [include_path]
         output_list = list(simplecpreprocessor.preprocess(f_obj,
                                                           include_paths=include_paths,
@@ -195,7 +201,8 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         self.assertEqual(list(output_list), [])
         
     def test_platform_constants(self):
-        f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n', 'ODDPLATFORM\n', '#endif'])
+        f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',
+                                      'ODDPLATFORM\n', '#endif'])
         platform_constants = {"ODDPLATFORM": "ODDPLATFORM"}
         output_list = simplecpreprocessor.preprocess(f_obj,
                                                      platform_constants=platform_constants)
