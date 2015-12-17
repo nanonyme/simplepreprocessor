@@ -130,6 +130,18 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                                       "#endif\n", "BAR\n"])
         expected_list = ["1\n"]
         self.run_case(f_obj, expected_list)
+
+    def test_define_inside_ifndef(self):
+        f_obj = FakeFile("header.h", ["#ifndef MODULE\n",
+                                      "#define MODULE\n",
+                                      "#ifdef BAR\n",
+                                      "5\n",
+                                      "#endif\n",
+                                      "1\n",
+                                      "#endif\n"])
+
+        expected_list = ["1\n"]
+        self.run_case(f_obj, expected_list)
                                 
     def test_lines_normalized(self):
         f_obj = FakeFile("header.h", ["foo\r\n", "bar\r\n"])
