@@ -117,25 +117,30 @@ class Preprocessor(object):
         self.verify_no_ml_define()
         if not self.constraints:
             raise ParseError("Unexpected #endif on line %s" % line_num)
-        self.constraints.pop()
+        _, ignore, _ = self.constraints.pop()
+        if ignore:
+            self.ignore = False
 
     def process_ifdef(self, line, line_num):
-        if self.ignore:
-            return
         self.verify_no_ml_define()
         _, condition = line.split(" ")
-        self.constraints.append((condition, True, line_num))
+        ignore = False
+        if not self.ignore and condition not in self.defines:
+            self.ignore = True
+            self.constraints.append((condition, True, line_num))
+        else:
+            self.constraints.append((condition, False, line_num))
 
     def process_ifndef(self, line, line_num):
-        if self.ignore:
-            return
         self.verify_no_ml_define()
         _, condition = line.split(" ")
-        self.constraints.append((condition, False, line_num))
+        if not self.ignore and condition in self.defines:
+            self.ignore = True
+            self.constraints.append((condition, True, line_num))
+        else:
+            self.constraints.append((condition, False, line_num))
 
     def process_undef(self, line, line_num):
-        if self.ignore:
-            return
         self.verify_no_ml_define()
         _, undefine = line.split(" ")
         try:
@@ -203,11 +208,9 @@ class Preprocessor(object):
                     if ret is not None:
                         for line in ret:
                             yield line
-                    self.calculate_ignore()
             elif self.ml_define:
                 self.process_ml_define(line, line_num)
-                self.calculate_ignore()
-            else:
+            elif not self.ignore:
                 yield self.process_source_line(line, line_num)
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
@@ -217,19 +220,6 @@ class Preprocessor(object):
             else:
                 fmt = "#ifndef %s from line %s left open"
             raise ParseError(fmt % (name, line_num))
-
-
-    def calculate_ignore(self):
-        defines = set(self.defines)
-        for key, value, _ in self.constraints:
-            if value and key not in defines:
-                self.ignore = True
-                break
-            if not value and key in defines:
-                self.ignore = True
-                break
-        else:
-            self.ignore = False
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
                header_handler=None, platform_constants=None,
