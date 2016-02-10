@@ -199,6 +199,8 @@ class Preprocessor(object):
             line = line.rstrip("\r\n")
             first_item = line.split(" ", 1)[0]
             if first_item.startswith("#"):
+                line, _, _ = line.partition("//")
+                line = line.rstrip("\t ")
                 macro = getattr(self, "process_%s" % first_item[1:], None)
                 if macro is None:
                     fmt = "%s on line %s contains unsupported macro"
