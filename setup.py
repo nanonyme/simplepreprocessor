@@ -10,6 +10,7 @@ setup(
     license = "BSD",
     url = "https://github.com/nanonyme/simplecpreprocessor",
     py_modules=["simplecpreprocessor"],
+    description=".. image:: https://travis-ci.org/nanonyme/simplecpreprocessor.svg?branch=master",
     classifiers=[
         "Development Status :: 4 - Beta",
         "Topic :: Utilities",
