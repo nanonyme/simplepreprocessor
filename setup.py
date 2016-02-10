@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = "simplecpreprocessor",
-    version = "0.0.8",
+    version = "0.0.9",
     author = "Seppo Yli-Olli",
     author_email = "seppo.yli-olli@iki.fi",
     description = "Simple C preprocessor for usage eg before CFFI",
