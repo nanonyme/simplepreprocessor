@@ -153,9 +153,9 @@ class TestSimpleCPreprocessor(unittest.TestCase):
     def test_lines_normalize_custom(self):
         f_obj = FakeFile("header.h", ["foo\n", "bar\n"])
         expected_list = ["foo\r\n", "bar\r\n"]
-        output_list = list(simplecpreprocessor.preprocess(f_obj,
-                                                          line_ending="\r\n"))
-        self.assertEqual(output_list, expected_list)
+        ret = simplecpreprocessor.preprocess(f_obj,
+                                             line_ending="\r\n")
+        self.assertEqual(list(ret), expected_list)
 
     def test_include_local_file_with_subdirectory(self):
         other_header = os.path.join("somedirectory", "other.h")
@@ -164,6 +164,22 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         ret = simplecpreprocessor.preprocess(f_obj,
                                              header_handler=handler)
         self.assertEqual(list(ret), ["1\n"])
+
+    def test_define_with_comment(self):
+        f_obj = FakeFile("header.h", [
+            "#define FOO 1 // comment\n",
+            "FOO\n"])
+        expected_list = ["1\n"]
+        self.run_case(f_obj, expected_list)
+
+    def test_ifdef_with_comment(self):
+        f_obj = FakeFile("header.h", [
+            "#define FOO",
+            "#ifdef FOO // comment\n",
+            "1\n",
+            "#endif"])
+        expected_list = ["1\n"]
+        self.run_case(f_obj, expected_list)
 
     def test_include_with_path_list(self):
         f_obj = FakeFile("header.h", ['#include <other.h>\n'])
