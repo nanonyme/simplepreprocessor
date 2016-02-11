@@ -2,7 +2,7 @@ from setuptools import setup
 import json
 
 with open("version.json") as f:
-    version = ".".join(json.load(f))
+    version = ".".join(str(i) for i in json.load(f))
 
 long_description="""TravisCI results                                        
     .. image:: https://travis-ci.org/nanonyme/simplecpreprocessor.svg?tag=v%s
