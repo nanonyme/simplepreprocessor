@@ -4,7 +4,7 @@ import json
 import argparse
 
 parser = argparse.ArgumentParser("Version bumper tool")
-group = parser.add_mutually_exclusive_group()
+group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument("--major", action="store_true",
                    help="Major version number bump")
 group.add_argument("--minor", action="store_true",
