@@ -4,23 +4,22 @@ import json
 import argparse
 
 parser = argparse.ArgumentParser("Version bumper tool")
-parser.add_argument("--major", action="store_true")
-parser.add_argument("--minor", action="store_true")
+group = parser.add_mutually_exclusive_group(required=True)
+group.add_argument("--major", action="store_true")
+group.add_argument("--minor", action="store_true")
 
 def bump_version(args):
     with open("version.json") as f:
         major, minor, build = json.load(f)
-    if args.major and not args.minor:
+    if args.major:
         major += 1
         minor = 0
         build = 0
-    elif not args.major and args.minor:
+    elif args.minor:
         minor += 1
         build = 0
-    elif not args.major and not args.minor:
-        build += 1
     else:
-        raise Exception("Major and minor cannot both be given")
+        build += 1
     with open("version.json", "w") as f:
         json.dump([major, minor, build], f)
     subprocess.check_call(["git", "commit", "version.json",
