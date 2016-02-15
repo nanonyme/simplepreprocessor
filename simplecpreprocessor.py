@@ -6,11 +6,13 @@ import errno
 
 logger = logging.getLogger(__name__)
 
+
 class ParseError(Exception):
     pass
 
 
 class HeaderHandler(object):
+
     def __init__(self, include_paths):
         self.include_paths = list(include_paths)
 
@@ -37,6 +39,7 @@ class HeaderHandler(object):
                 return f
         return None
 
+
 def calculate_windows_constants(bitness=None):
     if bitness is None:
         bitness, _ = platform.architecture()
@@ -49,12 +52,13 @@ def calculate_windows_constants(bitness=None):
         raise Exception("Unsupported bitness %s" % bitness)
     return constants
 
+
 def calculate_linux_constants(bitness=None):
     if bitness is None:
         bitness, _ = platform.architecture()
     constants = {
         "__linux__": "__linux__"
-        }
+    }
     if bitness == "32bit":
         constants["__i386__"] = "__i386__"
     elif bitness == "64bit":
@@ -63,7 +67,9 @@ def calculate_linux_constants(bitness=None):
         raise Exception("Unsupported bitness %s" % bitness)
     return constants
 
+
 class Preprocessor(object):
+
     def __init__(self, line_ending, include_paths=(), header_handler=None,
                  platform_constants=None, ignore_headers=()):
         self.defines = {}
@@ -159,7 +165,6 @@ class Preprocessor(object):
             self.ml_define = None
             self.process_define(define, old_line_num)
 
-
     def process_source_line(self, line, line_num):
         for key, value in self.defines.items():
             line = line.replace(key, value)
@@ -191,7 +196,6 @@ class Preprocessor(object):
         else:
             raise ParseError("Invalid macro %s on line %s" % (line,
                                                               line_num))
-        
 
     def preprocess(self, f_object, depth=0):
         self.header_stack.append(f_object)
@@ -223,6 +227,7 @@ class Preprocessor(object):
                 fmt = "#ifndef %s from line %s left open"
             raise ParseError(fmt % (name, line_num))
 
+
 def preprocess(f_object, line_ending="\n", include_paths=(),
                header_handler=None, platform_constants=None,
                ignore_headers=()):
@@ -232,4 +237,3 @@ def preprocess(f_object, line_ending="\n", include_paths=(),
     preprocessor = Preprocessor(line_ending, include_paths, header_handler,
                                 platform_constants, ignore_headers)
     return preprocessor.preprocess(f_object)
-

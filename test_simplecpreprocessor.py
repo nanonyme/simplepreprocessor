@@ -2,7 +2,9 @@ import unittest
 import simplecpreprocessor
 import os.path
 
+
 class FakeFile(object):
+
     def __init__(self, name, contents):
         self.name = name
         self.contents = contents
@@ -17,7 +19,9 @@ class FakeFile(object):
     def __exit__(self, exc_type, exc_value, traceback):
         pass
 
+
 class FakeHandler(object):
+
     def __init__(self, header_mapping):
         self.header_mapping = header_mapping
         self.include_paths = []
@@ -37,11 +41,11 @@ class FakeHandler(object):
                                    header)
         if header_file in self.header_mapping:
             return FakeFile(header_file,
-                            self.header_mapping[header_file])     
-
+                            self.header_mapping[header_file])
 
 
 class TestSimpleCPreprocessor(unittest.TestCase):
+
     def run_case(self, input_list, expected_list):
         output_list = list(simplecpreprocessor.preprocess(input_list))
         self.assertEqual(output_list, expected_list)
@@ -113,7 +117,6 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         expected_list = ["BAR\n"]
         self.run_case(f_obj, expected_list)
 
-
     def test_ifdef_unfulfilled_define_ignored(self):
         f_obj = FakeFile("header.h", ["#ifdef FOO\n", "#define BAR 1\n",
                                       "#endif\n", "BAR\n"])
@@ -144,7 +147,7 @@ class TestSimpleCPreprocessor(unittest.TestCase):
 
         expected_list = ["1\n"]
         self.run_case(f_obj, expected_list)
-                                
+
     def test_lines_normalized(self):
         f_obj = FakeFile("header.h", ["foo\r\n", "bar\r\n"])
         expected_list = ["foo\n", "bar\n"]
@@ -220,20 +223,19 @@ class TestSimpleCPreprocessor(unittest.TestCase):
             ret = simplecpreprocessor.preprocess(f_obj,
                                                  header_handler=handler)
             output_list = list(ret)
-                                                
 
     def test_ignore_include_path(self):
         f_obj = FakeFile("header.h", ['#include <other.h>\n'])
         handler = FakeHandler({os.path.join("subdirectory",
                                             "other.h"): ["1\n"]})
         paths = ["subdirectory"]
-        ignored=["other.h"]
+        ignored = ["other.h"]
         ret = simplecpreprocessor.preprocess(f_obj,
                                              include_paths=paths,
                                              header_handler=handler,
                                              ignore_headers=ignored)
         self.assertEqual(list(ret), [])
-        
+
     def test_platform_constants(self):
         f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',
                                       'ODDPLATFORM\n', '#endif'])
@@ -241,4 +243,3 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         ret = simplecpreprocessor.preprocess(f_obj,
                                              platform_constants=const)
         self.assertEqual(list(ret), ["ODDPLATFORM\n"])
-                        
