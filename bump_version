@@ -5,8 +5,12 @@ import argparse
 
 parser = argparse.ArgumentParser("Version bumper tool")
 group = parser.add_mutually_exclusive_group()
-group.add_argument("--major", action="store_true")
-group.add_argument("--minor", action="store_true")
+group.add_argument("--major", action="store_true",
+                   "Major version number bump")
+group.add_argument("--minor", action="store_true",
+                   "Minor version number bump")
+group.add_argument("--build", action="store_true",
+                   "Build number bump")
 
 def bump_version(args):
     with open("version.json") as f:
