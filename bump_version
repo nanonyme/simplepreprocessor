@@ -30,7 +30,8 @@ def bump_version(args):
                            "-m", "Bump version"])
     subprocess.check_call(["git", "tag",
                            "v%s.%s.%s" % (major, minor, build)])
-    subprocess.check_call(["git", "push", "--tags"])
+    subprocess.check_call(["git", "push"])
+    subprocess.check_call(["git", "push", "--tags"])    
 
 if __name__ == "__main__":
     bump_version(parser.parse_args())
