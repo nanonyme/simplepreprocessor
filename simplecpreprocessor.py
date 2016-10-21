@@ -28,8 +28,8 @@ class HeaderHandler(object):
     def add_include_paths(self, include_paths):
         self.include_paths.extend(include_paths)
 
-    def open_header(include_header):
-        for include_path in include_paths:
+    def open_header(self, include_header):
+        for include_path in self.include_paths:
             ret = os.path.join(include_path, include_header)
             try:
                 f = open(ret)
