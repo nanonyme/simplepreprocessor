@@ -77,6 +77,12 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         expected_list = ["(4 + (2 * x))\n", "(2 * (4 + y)\n"]
         self.run_case(f_obj, expected_list)
 
+    def test_partial_match(self):
+        f_obj = FakeFile("header.h", ["#define FOO\n",
+            "FOOBAR\n"])
+        expected_list = ["FOOBAR\n"]
+        self.run_case(f_obj, expected_list)                                
+
     def test_blank_define(self):
         f_obj = FakeFile("header.h", ["#define FOO\n",
                                       "FOO\n"])

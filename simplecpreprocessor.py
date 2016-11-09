@@ -3,9 +3,9 @@ from collections import OrderedDict
 import os.path
 import platform
 import errno
+import re
 
 logger = logging.getLogger(__name__)
-
 
 class ParseError(Exception):
     pass
@@ -179,7 +179,7 @@ class Preprocessor(object):
 
     def process_source_line(self, line, line_num):
         for key, value in self.defines.items():
-            line = line.replace(key, value)
+            line = re.sub(r"\b%s\b" % key, value, line)
         return line + self.line_ending
 
     def process_include(self, line, line_num):
