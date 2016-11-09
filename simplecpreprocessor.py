@@ -68,7 +68,15 @@ def calculate_linux_constants(bitness=None):
         raise Exception("Unsupported bitness %s" % bitness)
     return constants
 
-
+def calculate_platform_constants():
+    system = platform.system()
+    if system == "Windows":
+        return calculate_windows_constants()
+    elif system == "Linux":
+        return calculate_linux_constants()
+    else:
+        raise ParseError("Unsupported platform %s" % platform)
+                                                                                                        
 class Preprocessor(object):
 
     def __init__(self, line_ending, include_paths=(), header_handler=None,
@@ -76,15 +84,8 @@ class Preprocessor(object):
         self.defines = {}
         self.ignore_headers = ignore_headers
         if platform_constants is None:
-            system = platform.system()
-            if system == "Windows":
-                self.defines.update(calculate_windows_constants())
-            elif system == "Linux":
-                self.defines.update(calculate_linux_constants())
-            else:
-                raise ParseError("Unsupported platform %s" % platform)
-        else:
-            self.defines.update(platform_constants)
+            platform_constants = calculate_platform_constants()
+        self.defines.update(platform_constants)
         self.constraints = []
         self.ignore = False
         self.ml_define = None
