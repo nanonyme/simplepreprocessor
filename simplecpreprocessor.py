@@ -142,7 +142,10 @@ class Preprocessor(object):
 
     def process_ifdef(self, line, line_num):
         self.verify_no_ml_define()
-        _, condition = line.split(" ")
+        try:
+            _, condition = line.split(" ")
+        except:
+            raise Exception(repr(line))
         ignore = False
         if not self.ignore and condition not in self.defines:
             self.ignore = True
@@ -214,16 +217,16 @@ class Preprocessor(object):
         self.header_stack.append(f_object)
         for line_num, line in enumerate(f_object):
             line = line.rstrip("\r\n")
-            first_item = line.lstrip("\t ").split(" ", 1)[0]
+            maybe_macro, _, _ = line.partition("//")
+            maybe_macro = maybe_macro.strip("\t ")
+            first_item = maybe_macro.split(" ", 1)[0]
             if first_item.startswith("#"):
-                line, _, _ = line.partition("//")
-                line = line.rstrip("\t ")
                 macro = getattr(self, "process_%s" % first_item[1:], None)
                 if macro is None:
                     fmt = "%s on line %s contains unsupported macro"
                     raise ParseError(fmt % (line, line_num))
                 else:
-                    ret = macro(line, line_num)
+                    ret = macro(maybe_macro, line_num)
                     if ret is not None:
                         for line in ret:
                             yield line

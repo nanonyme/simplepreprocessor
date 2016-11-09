@@ -246,12 +246,19 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                                              header_handler=handler)
         self.assertEqual(list(ret), ["1\n"])
 
-    def test_tab_normalization(self):
+    def test_tab_macro_indentation(self):
         f_obj = FakeFile("header.h", [
             "\t#define FOO 1\n",
-            "FOO\n"])
-        expected_list = ["1\n"]
-        self.run_case(f_obj, expected_list)                                
+            "\tFOO\n"])
+        expected_list = ["\t1\n"]
+        self.run_case(f_obj, expected_list)
+
+    def test_space_macro_indentation(self):
+        f_obj = FakeFile("header.h", [
+            "    #define FOO 1\n",
+            "    FOO\n"])
+        expected_list = ["    1\n"]
+        self.run_case(f_obj, expected_list)
 
     def test_include_with_path_list_with_subdirectory(self):
         header_file = os.path.join("nested", "other.h")
