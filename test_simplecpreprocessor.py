@@ -148,6 +148,52 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         expected_list = ["1\n"]
         self.run_case(f_obj, expected_list)
 
+    def test_ifdef_else_undefined(self):
+        f_obj = FakeFile("header.h", [
+            "#ifdef A\n",
+            "#define X 1\n",
+            "#else\n",
+            "#define X 0\n",
+            "#endif\n",
+            "X\n"])
+        expected_list = ["0\n"]
+        self.run_case(f_obj, expected_list)
+
+    def test_ifdef_else_defined(self):
+        f_obj = FakeFile("header.h", [
+            "#define A\n",
+            "#ifdef A\n",
+            "#define X 1\n",
+            "#else\n",
+            "#define X 0\n",
+            "#endif\n",
+            "X\n"])
+        expected_list = ["1\n"]
+        self.run_case(f_obj, expected_list)
+
+    def test_ifndef_else_undefined(self):
+        f_obj = FakeFile("header.h", [
+            "#ifndef A\n",
+            "#define X 1\n",
+            "#else\n",
+            "#define X 0\n",
+            "#endif\n",
+            "X\n"])
+        expected_list = ["1\n"]
+        self.run_case(f_obj, expected_list)
+
+    def test_ifndef_else_defined(self):
+        f_obj = FakeFile("header.h", [
+            "#define A\n",
+            "#ifndef A\n",
+            "#define X 1\n",
+            "#else\n",
+            "#define X 0\n",
+            "#endif\n",
+            "X\n"])
+        expected_list = ["0\n"]
+        self.run_case(f_obj, expected_list)
+
     def test_lines_normalized(self):
         f_obj = FakeFile("header.h", ["foo\r\n", "bar\r\n"])
         expected_list = ["foo\n", "bar\n"]
