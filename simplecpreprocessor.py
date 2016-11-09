@@ -17,13 +17,14 @@ class HeaderHandler(object):
         self.include_paths = list(include_paths)
 
     def open_local_header(self, current_header, include_header):
-        ret = os.path.join(os.path.dirname(root_dir), include_header)
+        dir_name = os.path.dirname(os.path.abspath(dir_name))
+        ret = os.path.join(dir_name, include_header)
         try:
             f = open(ret)
         except IOError as e:
             return None
         else:
-            return ret
+            return f
 
     def add_include_paths(self, include_paths):
         self.include_paths.extend(include_paths)
