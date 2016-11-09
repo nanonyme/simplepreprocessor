@@ -213,7 +213,7 @@ class Preprocessor(object):
         self.header_stack.append(f_object)
         for line_num, line in enumerate(f_object):
             line = line.rstrip("\r\n")
-            first_item = line.split(" ", 1)[0]
+            first_item = line.lstrip("\t ").split(" ", 1)[0]
             if first_item.startswith("#"):
                 line, _, _ = line.partition("//")
                 line = line.rstrip("\t ")
