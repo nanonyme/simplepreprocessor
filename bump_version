@@ -14,7 +14,7 @@ group.add_argument("--build", action="store_true",
 
 def bump_version(args):
     tags = subprocess.check_output(["git", "tag", "-l", 
-	"v*.*.*", "--sort", "v=refname"]).split("\n")
+	"v*.*.*", "--sort", "v:refname"]).split("\n")
     if not tags:
         major = 0
         minor = 0
