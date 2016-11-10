@@ -4,6 +4,8 @@ import subprocess
 import json
 import argparse
 import version_handling
+import os
+import errno
 
 parser = argparse.ArgumentParser("Version bumper tool")
 group = parser.add_mutually_exclusive_group(required=True)
@@ -27,7 +29,12 @@ def bump_version(args):
         build += 1
     subprocess.check_call(["git", "tag",
                            "v%s.%s.%s" % (major, minor, build)])
-    subprocess.check_call(["git", "push", "--tags"])    
+    subprocess.check_call(["git", "push", "--tags"])
+    try:
+       os.remove("version.txt")
+    except IOError as e:
+       if e.errno != errno.ENOENT:
+           raise
 
 if __name__ == "__main__":
     bump_version(parser.parse_args())
