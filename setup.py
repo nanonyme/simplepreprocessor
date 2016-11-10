@@ -3,7 +3,7 @@ from setuptools import setup
 import json
 import version_handling
 
-version = "v%s.%s.%s" % version_handling.get_version()
+version = "%s.%s.%s" % version_handling.get_version()
 
 long_description="""TravisCI results                                        
     .. image:: https://travis-ci.org/nanonyme/simplecpreprocessor.svg?tag=v%s
