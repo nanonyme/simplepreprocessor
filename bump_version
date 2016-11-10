@@ -1,7 +1,9 @@
 #!/usr/bin/python
+from __future__ import absolute_import
 import subprocess
 import json
 import argparse
+import version_handling
 
 parser = argparse.ArgumentParser("Version bumper tool")
 group = parser.add_mutually_exclusive_group(required=True)
@@ -13,19 +15,7 @@ group.add_argument("--build", action="store_true",
                    help="Build number bump")
 
 def bump_version(args):
-    tags = subprocess.check_output(["git", "tag", "-l", 
-	"v*.*.*", "--sort", "v:refname"]).split("\n")
-    for tag in reversed(tags):
-        if tag:
-           ver = tag[1:].split(".")
-           major = int(ver[0])
-           minor = int(ver[1])
-           build = int(ver[2])
-           break
-    else:
-        major = 0
-        minor = 0
-        build = 0
+    major, minor, build = version_handling.get_version()
     if args.major:
         major += 1
         minor = 0
