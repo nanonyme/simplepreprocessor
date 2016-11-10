@@ -2,8 +2,17 @@ from __future__ import absolute_import
 from setuptools import setup
 import json
 import version_handling
+import errno
 
-version = "%s.%s.%s" % version_handling.get_version()
+try:
+    with open("version.txt") as f:
+        version = f.read()
+except IOError as e:
+    if e.errno != errno.ENOENT:
+        raise
+    version = "%s.%s.%s" % version_handling.get_version()
+    with open("version.txt", "w") as f:
+        f.write(version)
 
 long_description="""TravisCI results                                        
     .. image:: https://travis-ci.org/nanonyme/simplecpreprocessor.svg?tag=v%s
