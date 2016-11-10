@@ -134,11 +134,13 @@ class Preprocessor(object):
         if not self.constraints:
             raise ParseError("Unexpected #else on line %s" % line_num)
         constraint, ignore, _ = self.constraints.pop()
-        if ignore:
+        if self.ignore and ignore:
+            ignore = False
             self.ignore = False
-        else:
+        elif not self.ignore and not ignore:
+            ignore = True
             self.ignore = True
-        self.constraints.append((constraint, not ignore, line_num))
+        self.constraints.append((constraint, ignore, line_num))
 
     def process_ifdef(self, line, line_num):
         self.verify_no_ml_define()
