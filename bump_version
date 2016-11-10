@@ -15,15 +15,17 @@ group.add_argument("--build", action="store_true",
 def bump_version(args):
     tags = subprocess.check_output(["git", "tag", "-l", 
 	"v*.*.*", "--sort", "v:refname"]).split("\n")
-    if not tags:
+    for tag in reversed(tags):
+        if tag:
+           ver = tag[1:].split(".")
+           major = int(ver[0])
+           minor = int(ver[1])
+           build = int(ver[2])
+           break
+    else:
         major = 0
         minor = 0
         build = 0
-    else:
-        ver = tags[-1][1:].split(".")
-        major = int(ver[0])
-        minor = int(ver[1])
-        build = int(ver[2])
     if args.major:
         major += 1
         minor = 0
