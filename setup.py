@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 from setuptools import setup
 import json
+import version_handling
 
-with open("version.json") as f:
-    version = ".".join(str(i) for i in json.load(f))
+version = "v%s.%s.%s" % version_handling.get_version()
 
 long_description="""TravisCI results                                        
     .. image:: https://travis-ci.org/nanonyme/simplecpreprocessor.svg?tag=v%s
