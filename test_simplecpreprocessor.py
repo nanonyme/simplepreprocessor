@@ -96,6 +96,22 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         expected_list = ["FOO\n"]
         self.run_case(f_obj, expected_list)
 
+    def test_complex_ignore(self):
+        f_obj = FakeFile("header.h",
+                         [
+                            "#ifdef X\n",
+                            "#define X 1\n",
+                            "#ifdef X\n",
+                            "#define X 2\n",
+                            "#else\n",
+                            "#define X 3\n",
+                            "#endif\n",
+                            "#define X 4\n",
+                            "#endif\n",
+                            "X\n"])
+        expected_list = ["X\n"]
+        self.run_case(f_obj, expected_list)
+
     def test_extra_endif_causes_error(self):
         input_list = ["#endif\n"]
         with self.assertRaises(simplecpreprocessor.ParseError):
