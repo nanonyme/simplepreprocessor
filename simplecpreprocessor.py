@@ -1,7 +1,6 @@
 import logging
 import os.path
 import platform
-import errno
 import re
 import argparse
 
@@ -21,7 +20,7 @@ class HeaderHandler(object):
         ret = os.path.join(dir_name, include_header)
         try:
             f = open(ret)
-        except IOError as e:
+        except IOError:
             return None
         else:
             return f
@@ -34,7 +33,7 @@ class HeaderHandler(object):
             ret = os.path.join(include_path, include_header)
             try:
                 f = open(ret)
-            except IOError as e:
+            except IOError:
                 continue
             else:
                 return f
@@ -148,7 +147,6 @@ class Preprocessor(object):
             _, condition = line.split(" ")
         except:
             raise Exception(repr(line))
-        ignore = False
         if not self.ignore and condition not in self.defines:
             self.ignore = True
             self.constraints.append((condition, True, line_num))

@@ -295,16 +295,7 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         with self.assertRaises(simplecpreprocessor.ParseError):
             ret = simplecpreprocessor.preprocess(f_obj,
                                                  header_handler=handler)
-            output_list = list(ret)
-
-    def test_include_missing_local_file(self):
-        other_header = os.path.join("somedirectory", "other.h")
-        f_obj = FakeFile("header.h", ['#include <%s>\n' % other_header])
-        handler = FakeHandler({})
-        with self.assertRaises(simplecpreprocessor.ParseError):
-            ret = simplecpreprocessor.preprocess(f_obj,
-                                                 header_handler=handler)
-            output_list = list(ret)
+            list(ret)
 
     def test_ignore_include_path(self):
         f_obj = FakeFile("header.h", ['#include <other.h>\n'])
