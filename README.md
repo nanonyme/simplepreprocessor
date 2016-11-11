@@ -5,9 +5,11 @@ Usage
 
 import simplecpreprocessor
 
-There will be one function called preprocess. It can either be called with a file object or something that
-looks sufficiently like a file object. See unit tests to find out what's enough for a compatible wrapper.
-Line endings are by default normalized to unix but a parameter can be given to customize this behaviour.
+There will be one function called preprocess. It can either be called with a file object or
+something that looks sufficiently like a file object. See unit tests to find out what's enough
+for a compatible wrapper.
+Line endings are by default normalized to unix but a parameter can be given to customize this
+behaviour.
 
 
 Travis
@@ -17,7 +19,7 @@ Travis
 Gotchas
 ---------
 
-Supported macros: ifdef, ifndef, define, undef, include
+Supported macros: ifdef, ifndef, define, undef, include, else
 
 If using for FFI, you may want to ignore some system headers eg for types
 
