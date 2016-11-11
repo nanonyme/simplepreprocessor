@@ -3,5 +3,5 @@ language: python
 python:
  - "2.7"
  - "3.4"
-install: true
-script: python -m unittest -v test_simplecpreprocessor
+install: pip install pyflakes
+script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
