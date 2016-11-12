@@ -15,8 +15,7 @@ class HeaderHandler(object):
     def __init__(self, include_paths):
         self.include_paths = list(include_paths)
 
-    def open_local_header(self, current_header, include_header):
-        dir_name = os.path.dirname(os.path.abspath(current_header))
+    def open_local_header(self, dir_name, include_header):
         ret = os.path.join(dir_name, include_header)
         try:
             f = open(ret)
@@ -30,14 +29,10 @@ class HeaderHandler(object):
 
     def open_header(self, include_header):
         for include_path in self.include_paths:
-            ret = os.path.join(include_path, include_header)
-            try:
-                f = open(ret)
-            except IOError:
-                continue
-            else:
-                return f
-        return None
+            f = self.open_local_header(include_path, include_header)
+            if f:
+                break
+        return f
 
 
 def calculate_windows_constants(bitness=None):
@@ -203,7 +198,8 @@ class Preprocessor(object):
             current = self.header_stack[-1]
             header = item.strip('"')
             if header not in self.ignore_headers:
-                f = self.headers.open_local_header(current.name, header)
+                dir_name = os.path.dirname(os.path.abspath(current.name))
+                f = self.headers.open_local_header(dir_name, header)
                 if f is None:
                     raise ParseError(s)
                 with f:
