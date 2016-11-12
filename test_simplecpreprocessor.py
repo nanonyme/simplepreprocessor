@@ -1,7 +1,7 @@
 import unittest
 import simplecpreprocessor
 import os.path
-
+import os
 
 class FakeFile(object):
 
@@ -20,29 +20,20 @@ class FakeFile(object):
         pass
 
 
-class FakeHandler(object):
+class FakeHandler(simplecpreprocessor.HeaderHandler):
 
-    def __init__(self, header_mapping):
+    def __init__(self, header_mapping, include_paths=()):
         self.header_mapping = header_mapping
-        self.include_paths = []
+        super(FakeHandler, self).__init__(list(include_paths))
 
-    def add_include_paths(self, include_paths):
-        self.include_paths.extend(include_paths)
-
-    def open_header(self, header):
-        for include_path in self.include_paths:
-            header_file = os.path.join(include_path, header)
-            if header_file in self.header_mapping:
-                return FakeFile(header_file,
-                                self.header_mapping[header_file])
-
-    def open_local_header(self, current_header, header):
-        header_file = os.path.join(os.path.dirname(current_header),
-                                   header)
-        if header_file in self.header_mapping:
-            return FakeFile(header_file,
-                            self.header_mapping[header_file])
-
+    def open_local_header(self, dir_name, header):
+        header_file = "/".join((dir_name, header))
+        key = os.path.relpath(header_file, os.getcwd())
+        contents = self.header_mapping.get(key)
+        if contents is not None:
+            return FakeFile(header_file, contents)
+        else:
+            return None
 
 class TestSimpleCPreprocessor(unittest.TestCase):
 
@@ -229,7 +220,7 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         self.assertEqual(list(ret), expected_list)
 
     def test_include_local_file_with_subdirectory(self):
-        other_header = os.path.join("somedirectory", "other.h")
+        other_header = "somedirectory/other.h"
         f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
         handler = FakeHandler({other_header: ["1\n"]})
         ret = simplecpreprocessor.preprocess(f_obj,
