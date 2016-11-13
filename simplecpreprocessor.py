@@ -26,7 +26,7 @@ class HeaderHandler(object):
         except IOError:
             return None
         else:
-            return f        
+            return f
 
     def add_include_paths(self, include_paths):
         self.include_paths.extend(include_paths)
