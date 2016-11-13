@@ -2,6 +2,7 @@ import unittest
 import simplecpreprocessor
 import os.path
 import os
+import tempfile
 
 class FakeFile(object):
 
@@ -32,6 +33,9 @@ class FakeHandler(simplecpreprocessor.HeaderHandler):
             return FakeFile(header_path, contents)
         else:
             return None
+
+    def parent_open(self, header_path):
+        return super(FakeHandler, self)._open(header_path)
 
 class TestSimpleCPreprocessor(unittest.TestCase):
 
@@ -305,3 +309,16 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         ret = simplecpreprocessor.preprocess(f_obj,
                                              platform_constants=const)
         self.assertEqual(list(ret), ["ODDPLATFORM\n"])
+
+    def test_handler_missing_file(self):
+        handler = FakeHandler([])
+        self.assertIs(handler.parent_open("does_not_exist"), None)
+
+    def test_handler_existing_file(self):
+        handler = FakeHandler([])
+        with tempfile.NamedTemporaryFile(dir="") as f_obj_a:
+            with handler.parent_open(f_obj_a.name) as f_obj_b:
+                self.assertEqual(os.fstat(f_obj_a.fileno()).st_ino,
+                                 os.fstat(f_obj_b.fileno()).st_ino)
+                self.assertEqual(f_obj_a.name, f_obj_b.name)
+
