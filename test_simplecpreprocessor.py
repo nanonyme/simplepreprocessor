@@ -26,12 +26,10 @@ class FakeHandler(simplecpreprocessor.HeaderHandler):
         self.header_mapping = header_mapping
         super(FakeHandler, self).__init__(list(include_paths))
 
-    def _open(self, dir_name, header):
-        header_file = "/".join((dir_name, header))
-        key = os.path.relpath(header_file, os.getcwd())
-        contents = self.header_mapping.get(key)
+    def _open(self, header_path):
+        contents = self.header_mapping.get(header_path)
         if contents is not None:
-            return FakeFile(header_file, contents)
+            return FakeFile(header_path, contents)
         else:
             return None
 

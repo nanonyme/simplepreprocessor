@@ -16,13 +16,13 @@ class HeaderHandler(object):
         self.include_paths = list(include_paths)
 
     def open_local_header(self, current_header, include_header):
-        dir_name = os.path.dirname(os.path.abspath(current_header))
-        return self._open(dir_name, include_header)
+        header_path = os.path.join(os.path.dirname(current_header),
+                                   include_header)
+        return self._open(os.path.normpath(header_path))
 
-    def _open(self, dir_name, include_header):
-        ret = os.path.join(dir_name, include_header)
+    def _open(self, header_path):
         try:
-            f = open(ret)
+            f = open(header_path)
         except IOError:
             return None
         else:
@@ -33,7 +33,8 @@ class HeaderHandler(object):
 
     def open_header(self, include_header):
         for include_path in self.include_paths:
-            f = self._open(include_path, include_header)
+            header_path = os.path.join(include_path, include_header)
+            f = self._open(os.path.normpath(header_path))
             if f:
                 break
         return f
