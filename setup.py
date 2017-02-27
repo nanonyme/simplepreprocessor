@@ -1,10 +1,7 @@
 from __future__ import absolute_import
 from setuptools import setup
 
-long_description="""TravisCI results                                        
-    .. image:: https://travis-ci.org/nanonyme/simplecpreprocessor.svg
-"""
-
+long_description="""http://github.com/nanonyme/simplepreprocessor"""
 
 setup(
     name = "simplecpreprocessor",
