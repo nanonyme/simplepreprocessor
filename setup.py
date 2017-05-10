@@ -15,7 +15,7 @@ setup(
     long_description=long_description,
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
-    entrypoints={
+    entry_points={
         "console_scripts": [
             "simplecpreprocessor = simplecpreprocessor:main"
         ]
