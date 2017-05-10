@@ -269,10 +269,13 @@ parser.add_argument("--ignore-header", action="append",
 parser.add_argument("--output-file", required=True,
                     help="Output file that contains preprocessed header(s)")
 
-if __name__ == "__main__":
-    args = parser.parse_args()
+def main(args=None):
+    args = parser.parse_args(args)
     with open(args.input_file) as i:
         with open(args.output_file, "w") as o:
             for line in preprocess(i, include_paths=args.include_paths,
                                    ignore_headers=args.ignore_headers):
                 o.write(line)
+
+if __name__ == "__main__":
+    main()

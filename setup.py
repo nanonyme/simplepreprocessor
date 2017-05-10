@@ -15,6 +15,11 @@ setup(
     long_description=long_description,
     use_scm_version=True,
     setup_requires=["setuptools_scm"],
+    entrypoints={
+        "console_scripts": [
+            "simplecpreprocessor = simplecpreprocessor:main"
+        ]
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Topic :: Utilities",
