@@ -5,6 +5,7 @@ python:
 - '3.4'
 install: pip install pyflakes
 script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
+cache: pip
 deploy:
   provider: pypi
   user: nanonyme-ci
