@@ -5,6 +5,8 @@ python:
 - '3.4'
 script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
 cache: pip
+before_cache:
+  - rm -f $HOME/.cache/pip/log/debug.log
 deploy:
   provider: pypi
   user: nanonyme-ci
