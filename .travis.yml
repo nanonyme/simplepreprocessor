@@ -1,9 +1,10 @@
 sudo: false
 dist: trusty
 language: python
+addons:
 python:
 - '2.7'
-- '3.4'
+- '3.5'
 script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
 cache:
   directories:
