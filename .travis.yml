@@ -4,9 +4,9 @@ python:
 - '2.7'
 - '3.4'
 script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
-cache: pip
-before_cache:
-  - rm -f $HOME/.cache/pip/log/debug.log
+cache:
+  directories:
+    - $HOME/.cache/pip/wheels  
 deploy:
   provider: pypi
   user: nanonyme-ci
