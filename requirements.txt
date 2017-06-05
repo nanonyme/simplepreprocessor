@@ -1,0 +1,2 @@
+pyflakes
+setuptools_scm

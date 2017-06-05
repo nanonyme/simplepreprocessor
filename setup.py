@@ -14,7 +14,6 @@ setup(
     py_modules=["simplecpreprocessor"],
     long_description=long_description,
     use_scm_version=True,
-    setup_requires=["setuptools_scm"],
     entry_points={
         "console_scripts": [
             "simplecpreprocessor = simplecpreprocessor:main"
