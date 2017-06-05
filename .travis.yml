@@ -1,15 +1,16 @@
 sudo: false
 dist: trusty
 language: python
-addons:
+install:
+  - pip wheel --wheel-dir wheelhouse -r requirements
+  - pip install --no-index --find-links wheelhouse -r requirements
 python:
 - '2.7'
 - '3.5'
 script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
 cache:
   directories:
-    - $HOME/.cache/pip/wheels
-    - $HOME/.cache/pip/http
+    - wheelhouse
 deploy:
   provider: pypi
   user: nanonyme-ci
