@@ -8,7 +8,8 @@ python:
 script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
 cache:
   directories:
-    - $HOME/.cache/pip/wheels  
+    - $HOME/.cache/pip/wheels
+    - $HOME/.cache/pip/http
 deploy:
   provider: pypi
   user: nanonyme-ci
