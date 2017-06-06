@@ -13,6 +13,8 @@ script:
 cache:
   directories:
     - wheelhouse
+git:
+  depth: 3
 deploy:
   provider: pypi
   user: nanonyme-ci
