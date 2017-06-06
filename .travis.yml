@@ -5,9 +5,11 @@ install:
   - pip wheel --wheel-dir wheelhouse -r requirements.txt
   - pip install --no-index --find-links wheelhouse -r requirements.txt
 python:
-- '2.7'
-- '3.5'
-script: python -m unittest -v test_simplecpreprocessor && pyflakes simplecpreprocessor.py
+  - '2.7'
+  - '3.5'
+script:
+  - python -m unittest -v test_simplecpreprocessor
+  - pyflakes simplecpreprocessor.py
 cache:
   directories:
     - wheelhouse
