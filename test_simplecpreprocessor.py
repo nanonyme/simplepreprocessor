@@ -4,6 +4,7 @@ import os.path
 import os
 import tempfile
 
+
 class FakeFile(object):
 
     def __init__(self, name, contents):
@@ -36,6 +37,7 @@ class FakeHandler(simplecpreprocessor.HeaderHandler):
 
     def parent_open(self, header_path):
         return super(FakeHandler, self)._open(header_path)
+
 
 class TestSimpleCPreprocessor(unittest.TestCase):
 
@@ -71,10 +73,12 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         self.run_case(f_obj, expected_list)
 
     def test_partial_match(self):
-        f_obj = FakeFile("header.h", ["#define FOO\n",
-            "FOOBAR\n"])
+        f_obj = FakeFile("header.h", [
+            "#define FOO\n",
+            "FOOBAR\n"
+        ])
         expected_list = ["FOOBAR\n"]
-        self.run_case(f_obj, expected_list)                                
+        self.run_case(f_obj, expected_list)
 
     def test_blank_define(self):
         f_obj = FakeFile("header.h", ["#define FOO\n",
@@ -321,4 +325,3 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                 self.assertEqual(os.fstat(f_obj_a.fileno()).st_ino,
                                  os.fstat(f_obj_b.fileno()).st_ino)
                 self.assertEqual(f_obj_a.name, f_obj_b.name)
-

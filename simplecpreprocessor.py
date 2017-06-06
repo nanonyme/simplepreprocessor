@@ -6,6 +6,7 @@ import argparse
 
 logger = logging.getLogger(__name__)
 
+
 class ParseError(Exception):
     pass
 
@@ -67,6 +68,7 @@ def calculate_linux_constants(bitness=None):
         raise Exception("Unsupported bitness %s" % bitness)
     return constants
 
+
 def calculate_platform_constants():
     system = platform.system()
     if system == "Windows":
@@ -75,7 +77,8 @@ def calculate_platform_constants():
         return calculate_linux_constants()
     else:
         raise ParseError("Unsupported platform %s" % platform)
-                                                                                                        
+
+
 class Preprocessor(object):
 
     def __init__(self, line_ending, include_paths=(), header_handler=None,
@@ -254,8 +257,10 @@ def preprocess(f_object, line_ending="\n", include_paths=(),
                                 platform_constants, ignore_headers)
     return preprocessor.preprocess(f_object)
 
+
 def split_paths(path):
     return path.split(os.pathsep)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input-file", required=True,
@@ -269,6 +274,7 @@ parser.add_argument("--ignore-header", action="append",
 parser.add_argument("--output-file", required=True,
                     help="Output file that contains preprocessed header(s)")
 
+
 def main(args=None):
     args = parser.parse_args(args)
     with open(args.input_file) as i:
@@ -276,6 +282,7 @@ def main(args=None):
             for line in preprocess(i, include_paths=args.include_paths,
                                    ignore_headers=args.ignore_headers):
                 o.write(line)
+
 
 if __name__ == "__main__":
     main()
