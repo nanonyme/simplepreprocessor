@@ -18,7 +18,7 @@ class HeaderHandler(object):
 
     def open_local_header(self, current_header, include_header):
         header_path = os.path.join(os.path.dirname(current_header),
-                                include_header)
+                                   include_header)
         return self._open(header_path)
 
     def _open(self, header_path):
@@ -165,7 +165,7 @@ class Preprocessor(object):
 
     def process_pragma_once(self, line, line_num):
         self.include_once.append(self.header_stack[-1].name)
-            
+
     def process_ifndef(self, line, line_num):
         self.verify_no_ml_define()
         _, condition = line.split(" ")
