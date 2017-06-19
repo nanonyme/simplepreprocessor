@@ -116,11 +116,11 @@ class Preprocessor(object):
         if len(define) == 1:
             self.defines[define[0]] = ""
         else:
-            for candidate in self.defines:
-                if candidate in define[1]:
-                    r = ("Indirect self-reference detected "
-                         "#define %s %s, line %s")
-                    raise ParseError(r % (define[0], define[1], line_num))
+            #for candidate in self.defines:
+            #    if candidate in define[1]:
+            #        r = ("Indirect self-reference detected "
+            #             "#define %s %s, line %s")
+            #        raise ParseError(r % (define[0], define[1], line_num))
             self.defines[define[0]] = define[1]
 
     def process_endif(self, line, line_num):
@@ -185,10 +185,26 @@ class Preprocessor(object):
             self.process_define(define, old_line_num)
 
     def process_source_line(self, line, line_num):
-        for key, value in self.defines.items():
-            line = re.sub(r"\b%s\b" % key, value, line)
+        line = self._recursive_transform(line)
         return line + self.line_ending
 
+    def _recursive_transform(self, line, matches=None):
+        original_line = line
+        if matches is None:
+            matches = set()
+        def transform_word(match):
+            word = match.group(0)
+            if word in matches:
+                return word
+            else:
+                matches.add(word)
+                return self.defines.get(word, word)
+        line = re.sub(r"\b\w+\b", transform_word, line)
+        if original_line == line:
+            return line
+        else:
+            return self._recursive_transform(line, matches)
+        
     def process_include(self, line, line_num):
         _, item = line.split(" ", 1)
         s = "%s on line %s includes a file that can't be found" % (line,

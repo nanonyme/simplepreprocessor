@@ -64,12 +64,11 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         expected_list = ["FOO\n"]
         self.run_case(f_obj, expected_list)
 
-    @unittest.expectedFailure
     def test_define_indirect_self_reference(self):
         f_obj = FakeFile("header.h", ["#define x (4 + y)\n",
                                       "#define y (2 * x)\n",
                                       "x\n", "y\n"])
-        expected_list = ["(4 + (2 * x))\n", "(2 * (4 + y)\n"]
+        expected_list = ["(4 + (2 * x))\n", "(2 * (4 + y))\n"]
         self.run_case(f_obj, expected_list)
 
     def test_partial_match(self):
@@ -84,6 +83,12 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         f_obj = FakeFile("header.h", ["#define FOO\n",
                                       "FOO\n"])
         expected_list = ["\n"]
+        self.run_case(f_obj, expected_list)
+
+    def test_define_parens(self):
+        f_obj = FakeFile("header.h", ["#define FOO (x)\n",
+                                      "FOO\n"])
+        expected_list = ["(x)\n"]
         self.run_case(f_obj, expected_list)
 
     def test_define_undefine(self):
