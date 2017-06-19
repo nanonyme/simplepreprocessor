@@ -311,6 +311,20 @@ class TestSimpleCPreprocessor(unittest.TestCase):
                                              ignore_headers=ignored)
         self.assertEqual(list(ret), [])
 
+    def test_pragma_once(self):
+        f_obj = FakeFile("header.h", ["""#include "other.h"\n""",
+                                      """#include "other.h"\n""",
+                                      "X\n"])
+        handler = FakeHandler({"other.h": [
+            "#pragma once\n",
+            "#ifdef X\n",
+            "#define X 2\n",
+            "#else\n",
+            "#define X 1\n",
+            "#endif\n"]})
+        ret = simplecpreprocessor.preprocess(f_obj, header_handler=handler)
+        self.assertEqual(list(ret), ["1\n"])
+
     def test_platform_constants(self):
         f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',
                                       'ODDPLATFORM\n', '#endif'])

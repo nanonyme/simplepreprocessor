@@ -18,8 +18,8 @@ class HeaderHandler(object):
 
     def open_local_header(self, current_header, include_header):
         header_path = os.path.join(os.path.dirname(current_header),
-                                   include_header)
-        return self._open(os.path.normpath(header_path))
+                                include_header)
+        return self._open(header_path)
 
     def _open(self, header_path):
         try:
@@ -85,6 +85,7 @@ class Preprocessor(object):
                  platform_constants=None, ignore_headers=()):
         self.defines = {}
         self.ignore_headers = ignore_headers
+        self.include_once = []
         if platform_constants is None:
             platform_constants = calculate_platform_constants()
         self.defines.update(platform_constants)
@@ -151,6 +152,20 @@ class Preprocessor(object):
         else:
             self.constraints.append((condition, False, line_num))
 
+    def process_pragma(self, line, line_num):
+        self.verify_no_ml_define()
+        _, _, pragma_name = line.partition(" ")
+        method_name = "process_pragma_%s" % pragma_name
+        pragma = getattr(self, method_name, None)
+        if pragma is None:
+            raise Exception("Unsupported pragma %s on line %s" % (pragma_name,
+                                                                  line_num))
+        else:
+            pragma(line, line_num)
+
+    def process_pragma_once(self, line, line_num):
+        self.include_once.append(self.header_stack[-1].name)
+            
     def process_ifndef(self, line, line_num):
         self.verify_no_ml_define()
         _, condition = line.split(" ")
@@ -212,8 +227,9 @@ class Preprocessor(object):
                 if f is None:
                     raise ParseError(s)
                 with f:
-                    for line in self.preprocess(f):
-                        yield line
+                    if f.name not in self.include_once:
+                        for line in self.preprocess(f):
+                            yield line
         elif item.startswith('"') and item.endswith('"'):
             current = self.header_stack[-1]
             header = item.strip('"')
@@ -222,8 +238,9 @@ class Preprocessor(object):
                 if f is None:
                     raise ParseError(s)
                 with f:
-                    for line in self.preprocess(f):
-                        yield line
+                    if f.name not in self.include_once:
+                        for line in self.preprocess(f):
+                            yield line
         else:
             raise ParseError("Invalid macro %s on line %s" % (line,
                                                               line_num))
