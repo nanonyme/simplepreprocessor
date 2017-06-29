@@ -1,0 +1,6 @@
+#!/bin/sh -xe
+SOURCE_DATE_EPOCH=`git show -s --format=%ct`
+export SOURCE_DATE_EPOCH
+flake8 *.py
+python -m unittest -v test_simplecpreprocessor
+python setup.py bdist_wheel
