@@ -4,3 +4,4 @@ export SOURCE_DATE_EPOCH
 flake8 *.py
 python -m unittest -v test_simplecpreprocessor
 python setup.py bdist_wheel
+touch -t $SOURCE_DATE_EPOCH dist/*
