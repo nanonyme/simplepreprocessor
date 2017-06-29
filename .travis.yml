@@ -11,16 +11,16 @@ python:
 script:
   - flake8 *.py
   - python -m unittest -v test_simplecpreprocessor
+  - python setup.py bdist_wheel
 cache:
   directories:
     - wheelhouse
 git:
   depth: 3
 deploy:
+  skip_cleanup: true
   provider: script
-  script:
-    - python setup.py bdist_wheel
-    - twine upload dist/*
+  script: twine upload dist/*
   on:
     tags: true
     python: 3.5
