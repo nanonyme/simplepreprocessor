@@ -1,9 +1,5 @@
 sudo: false
 dist: trusty
-env:
-  global:
-    TWINE_USERNAME=nanonyme-ci
-    secure: "EHHdLNUdnAZ2PDnsc8omDvG2DArCcj4E2kiMtHxFOsjad6RN0Ew1o/G6+9JtdgexB9UUwQ4tZ1Vn6RkIerukK1s7arzt9DC4e4M/7KS/CUWFGpLSPrnHLFm5t7kJ6AKbcGOPLACSiDWEBkCfqstz9W3wRPGpb9jsduXUWdAB8T97GO0NbuoL0+U+4w4ggyGymO6wtC7GIQKxAoDKHT+hGjtxDKxZYsypIxZ2zm3Ajdu5TnKOPEcVJXRW1NKXWrmWaGudXm5Vtv3pHNHGdzvICuB5xZJd0OEr9zM2EyTg960KeWdpelXavq0/64a8UhU8GPk0mkxFBs9rK8nJFsPyT/N/RMqCX0bNSjyMV8Y4r1SnUeDG69WrH6acYjZj0hDv7QweaLu1/LzBzY+TrU+/ckJs6oa/v++7H5ULGaz0H0n7NMEojQeGqH808/RBbi8MbRGSqg/CaaY70RMFuj9bDl+8ucNNxqqs9ReRo4iPpVzdS2i3L3+ARbL9OIXX+W2wnrPOQ3dTa3NkOHnuLsyc5w9Bc2lv+7Upu2R+kP5JW5iOCTXcRx7SasYT/TKmLCTqfzhzCm/+rsHmnYTj2pgggLwdU4zEvJSQATDgaL3IcD8tFHbxOkD6PHNZ4kImUATJyMIC1epfADiGMVnJn4u/l6SXZjLewFN+n6Uuy9xjM5M="
 language: python
 install:
   - if [ -d wheelhouse ]; then mv wheelhouse wheelhouse.old; fi
