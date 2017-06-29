@@ -1,2 +1,3 @@
 flake8
 setuptools_scm
+twine
