@@ -23,4 +23,4 @@ deploy:
   script: twine upload dist/*
   on:
     tags: true
-    python: 3.5
+
