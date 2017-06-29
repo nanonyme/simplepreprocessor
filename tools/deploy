@@ -1,0 +1,2 @@
+#!/bin/sh -xe
+twine upload dist/*

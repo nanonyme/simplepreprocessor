@@ -14,7 +14,7 @@ git:
 deploy:
   skip_cleanup: true
   provider: script
-  script: twine upload dist/*
+  script: ./tools/deploy
   on:
     tags: true
 
