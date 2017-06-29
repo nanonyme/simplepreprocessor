@@ -1,11 +1,11 @@
 sudo: false
 dist: trusty
 language: python
-install: ./install_deps
+install: ./tools/install_deps
 python:
   - '2.7'
   - '3.5'
-script: ./build
+script: ./tools/build
 cache:
   directories:
     - wheelhouse
