@@ -1,2 +1,6 @@
 #!/bin/sh -xe
+SCRIPT=$(readlink -f "$0")
+SCRIPTPATH=$(dirname "$SCRIPT")
+VERSION=$(${SCRIPTPATH}/get_version)
+pip download simplecpreprocessor==$VERSION >/dev/null 2>&1 && echo "Already published" && exit 0
 twine upload dist/*
