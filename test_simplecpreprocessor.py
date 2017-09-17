@@ -339,8 +339,8 @@ class TestSimpleCPreprocessor(unittest.TestCase):
 
     def test_handler_existing_file(self):
         handler = FakeHandler([])
-        with tempfile.NamedTemporaryFile(dir="") as f_obj_a:
-            with handler.parent_open(f_obj_a.name) as f_obj_b:
-                self.assertEqual(os.fstat(f_obj_a.fileno()).st_ino,
-                                 os.fstat(f_obj_b.fileno()).st_ino)
-                self.assertEqual(f_obj_a.name, f_obj_b.name)
+        file_info = os.stat(__file__)
+        with handler.parent_open(__file__) as f_obj:
+            self.assertEqual(os.fstat(f_obj.fileno()).st_ino,
+                file_info.st_ino)
+            self.assertEqual(f_obj.name, __file__)
