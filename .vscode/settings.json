@@ -7,5 +7,6 @@
         "test*.py"
     ],
     "python.unitTest.unittestEnabled": true,
-    "python.linting.pylintEnabled": false
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true
 }

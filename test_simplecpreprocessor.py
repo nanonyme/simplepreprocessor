@@ -2,7 +2,6 @@ import unittest
 import simplecpreprocessor
 import os.path
 import os
-import tempfile
 
 
 class FakeFile(object):
@@ -342,5 +341,5 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         file_info = os.stat(__file__)
         with handler.parent_open(__file__) as f_obj:
             self.assertEqual(os.fstat(f_obj.fileno()).st_ino,
-                file_info.st_ino)
+                             file_info.st_ino)
             self.assertEqual(f_obj.name, __file__)
