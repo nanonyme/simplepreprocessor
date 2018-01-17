@@ -119,6 +119,7 @@ class Preprocessor(object):
         self.verify_no_ml_define()
         if line.endswith("\\"):
             self.ml_define = line[:-1].rstrip(" \t"), line_num
+            return
         define = line.split(" ", 2)[1:]
         if len(define) == 1:
             self.defines[define[0]] = ""
