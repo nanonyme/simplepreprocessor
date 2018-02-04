@@ -151,8 +151,8 @@ class Preprocessor(object):
         self.verify_no_ml_define()
         try:
             _, condition = line.split(" ")
-        except:
-            raise Exception(repr(line))
+        except ValueError:
+            raise ValueError(repr(line))
         if not self.ignore and condition not in self.defines:
             self.ignore = True
             self.constraints.append((condition, True, line_num))
