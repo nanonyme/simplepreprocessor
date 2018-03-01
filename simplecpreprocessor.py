@@ -78,11 +78,13 @@ def calculate_linux_constants(bitness=None):
 def calculate_platform_constants():
     system = platform.system()
     if system == "Windows":
-        return calculate_windows_constants()
+        constants = calculate_windows_constants()
     elif system == "Linux":
-        return calculate_linux_constants()
+        constants = calculate_linux_constants()
     else:
         raise ParseError("Unsupported platform %s" % platform)
+    constants["__SIZE_TYPE__"] = "size_t"
+    return constants
 
 
 class Preprocessor(object):

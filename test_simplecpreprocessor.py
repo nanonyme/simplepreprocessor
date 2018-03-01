@@ -63,6 +63,11 @@ class TestSimpleCPreprocessor(unittest.TestCase):
         expected_list = ["FOO\n"]
         self.run_case(f_obj, expected_list)
 
+    def test_expand_size_t(self):
+        f_obj = FakeFile("header.h", ["__SIZE_TYPE__\n"])
+        expected_list = ["size_t\n"]
+        self.run_case(f_obj, expected_list)
+
     def test_define_indirect_self_reference(self):
         f_obj = FakeFile("header.h", ["#define x (4 + y)\n",
                                       "#define y (2 * x)\n",
