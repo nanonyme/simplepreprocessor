@@ -88,6 +88,7 @@ def calculate_platform_constants():
 
 PLATFORM_CONSTANTS = calculate_platform_constants()
 
+
 class Preprocessor(object):
 
     def __init__(self, line_ending, include_paths=(), header_handler=None,

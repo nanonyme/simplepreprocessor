@@ -5,7 +5,6 @@ import os.path
 import os
 import cProfile
 from pstats import Stats
-import sys
 
 
 class FakeFile(object):
@@ -41,6 +40,7 @@ class FakeHandler(simplecpreprocessor.HeaderHandler):
     def parent_open(self, header_path):
         return super(FakeHandler, self)._open(header_path)
 
+
 class ProfilerMixin(object):
     @classmethod
     def setUpClass(cls):
@@ -50,10 +50,11 @@ class ProfilerMixin(object):
     @classmethod
     def tearDownClass(cls):
         cls.profiler.disable()
-        p = Stats (cls.profiler)
+        p = Stats(cls.profiler)
         p.strip_dirs()
         p.print_stats()
-    
+
+
 class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def run_case(self, input_list, expected_list):
@@ -364,4 +365,3 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             self.assertEqual(os.fstat(f_obj.fileno()).st_ino,
                              file_info.st_ino)
             self.assertEqual(f_obj.name, __file__)
-
