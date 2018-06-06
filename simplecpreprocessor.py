@@ -204,13 +204,12 @@ class Preprocessor(object):
             self.process_define(define, old_line_num)
 
     def process_source_line(self, line, line_num):
-        line = self._recursive_transform(line)
+        matches = set()
+        line = self._recursive_transform(line, matches)
         return line + self.line_ending
 
-    def _recursive_transform(self, line, matches=None):
+    def _recursive_transform(self, line, matches):
         original_line = line
-        if matches is None:
-            matches = set()
 
         def transform_word(match):
             word = match.group(0)
