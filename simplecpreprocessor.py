@@ -86,16 +86,15 @@ def calculate_platform_constants():
     constants["__SIZE_TYPE__"] = "size_t"
     return constants
 
+PLATFORM_CONSTANTS = calculate_platform_constants()
 
 class Preprocessor(object):
 
     def __init__(self, line_ending, include_paths=(), header_handler=None,
-                 platform_constants=None, ignore_headers=()):
+                 platform_constants=PLATFORM_CONSTANTS, ignore_headers=()):
         self.defines = {}
         self.ignore_headers = ignore_headers
         self.include_once = []
-        if platform_constants is None:
-            platform_constants = calculate_platform_constants()
         self.defines.update(platform_constants)
         self.constraints = []
         self.ignore = False
@@ -285,7 +284,7 @@ class Preprocessor(object):
 
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
-               header_handler=None, platform_constants=None,
+               header_handler=None, platform_constants=PLATFORM_CONSTANTS,
                ignore_headers=()):
     r"""
     This preprocessor yields lines with \n at the end
