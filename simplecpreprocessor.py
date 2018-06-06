@@ -86,6 +86,7 @@ def calculate_platform_constants():
     constants["__SIZE_TYPE__"] = "size_t"
     return constants
 
+
 PLATFORM_CONSTANTS = calculate_platform_constants()
 
 
