@@ -89,6 +89,7 @@ def calculate_platform_constants():
 
 PLATFORM_CONSTANTS = calculate_platform_constants()
 DEFAULT_LINE_ENDING = "\n"
+PRAGMA_ONCE = object()
 
 
 class Preprocessor(object):
@@ -98,7 +99,7 @@ class Preprocessor(object):
                  ignore_headers=()):
         self.defines = {}
         self.ignore_headers = ignore_headers
-        self.include_once = []
+        self.include_once = {}
         self.defines.update(platform_constants)
         self.constraints = []
         self.ignore = False
@@ -176,7 +177,10 @@ class Preprocessor(object):
             pragma(line, line_num)
 
     def process_pragma_once(self, line, line_num):
-        self.include_once.append(self.header_stack[-1].name)
+        self.include_once[self.current_name()] = PRAGMA_ONCE
+
+    def current_name(self):
+        return self.header_stack[-1].name
 
     def process_ifndef(self, line, line_num):
         self.verify_no_ml_define()
@@ -228,7 +232,11 @@ class Preprocessor(object):
             return self._recursive_transform(line, matches)
 
     def skip_file(self, name):
-        return name in self.include_once
+        constraint = self.include_once.get(name)
+        if constraint is PRAGMA_ONCE:
+            return True
+        else:
+            return False
 
     def process_include(self, line, line_num):
         _, item = line.split(" ", 1)
