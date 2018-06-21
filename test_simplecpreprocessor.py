@@ -264,6 +264,15 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
                                              header_handler=handler)
         self.assertEqual(list(ret), ["1\n"])
 
+    def test_ifdef_file_guard(self):
+        other_header = "somedirectory/other.h"
+        f_obj = FakeFile("header.h",
+                         ['#include "%s"\n' % other_header])
+        handler = FakeHandler({other_header: ["1\n"]})
+        ret = simplecpreprocessor.preprocess(f_obj,
+                                             header_handler=handler)
+        self.assertEqual(list(ret), ["1\n"])
+
     def test_define_with_comment(self):
         f_obj = FakeFile("header.h", [
             "#define FOO 1 // comment\n",
@@ -348,8 +357,10 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             "#else\n",
             "#define X 1\n",
             "#endif\n"]})
-        ret = simplecpreprocessor.preprocess(f_obj, header_handler=handler)
+        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        ret = preprocessor.preprocess(f_obj)
         self.assertEqual(list(ret), ["1\n"])
+        self.assertTrue(preprocessor.skip_file("other.h"))
 
     def test_platform_constants(self):
         f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',

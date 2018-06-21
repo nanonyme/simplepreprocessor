@@ -88,12 +88,14 @@ def calculate_platform_constants():
 
 
 PLATFORM_CONSTANTS = calculate_platform_constants()
+DEFAULT_LINE_ENDING = "\n"
 
 
 class Preprocessor(object):
 
-    def __init__(self, line_ending, include_paths=(), header_handler=None,
-                 platform_constants=PLATFORM_CONSTANTS, ignore_headers=()):
+    def __init__(self, line_ending=DEFAULT_LINE_ENDING, include_paths=(),
+                 header_handler=None, platform_constants=PLATFORM_CONSTANTS,
+                  ignore_headers=()):
         self.defines = {}
         self.ignore_headers = ignore_headers
         self.include_once = []
@@ -225,6 +227,9 @@ class Preprocessor(object):
         else:
             return self._recursive_transform(line, matches)
 
+    def skip_file(self, name):
+        return name in self.include_once
+        
     def process_include(self, line, line_num):
         _, item = line.split(" ", 1)
         s = "%s on line %s includes a file that can't be found" % (line,
@@ -236,7 +241,7 @@ class Preprocessor(object):
                 if f is None:
                     raise ParseError(s)
                 with f:
-                    if f.name not in self.include_once:
+                    if not self.skip_file(f.name):
                         for line in self.preprocess(f):
                             yield line
         elif item.startswith('"') and item.endswith('"'):
