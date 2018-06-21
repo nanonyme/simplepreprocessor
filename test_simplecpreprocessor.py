@@ -52,7 +52,7 @@ class ProfilerMixin(object):
 
     @classmethod
     def tearDownClass(cls):
-        if self.profiler is None:
+        if cls.profiler is None:
             return
         cls.profiler.disable()
         p = Stats(cls.profiler)
