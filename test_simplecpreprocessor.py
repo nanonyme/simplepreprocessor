@@ -362,30 +362,59 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         self.assertEqual(list(ret), ["1\n"])
         self.assertTrue(preprocessor.skip_file("other.h"))
 
-    def test_fullfile_guard_ifdef(self):
-        f_obj = FakeFile("header.h", ["#define X\n",
-                                      """#include "other.h"\n""",
-                                      "done\n"])
+    def test_fullfile_guard_ifdef_skip(self):
+        f_obj = FakeFile("header.h", ["""#include "other.h"\n""",
+                                      "1\n"])
         handler = FakeHandler({"other.h": [
             "#ifdef X\n",
-            "#undef X\n",
+            "#endif\n"]})
+        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        ret = preprocessor.preprocess(f_obj)
+        self.assertEqual(list(ret), ["1\n"])
+        self.assertTrue(preprocessor.skip_file("other.h"),
+                        "%s -> %s" % (preprocessor.include_once,
+                                      preprocessor.defines))
+
+    def test_fullfile_guard_ifdef_noskip(self):
+        f_obj = FakeFile("header.h", ["""#include "other.h"\n""",
+                                      "#define X 1\n",
+                                      "1\n"])
+        handler = FakeHandler({"other.h": [
+            "#ifdef X\n",
+            "#endif\n"]})
+        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        ret = preprocessor.preprocess(f_obj)
+        self.assertEqual(list(ret), ["1\n"])
+        self.assertFalse(preprocessor.skip_file("other.h"),
+                         "%s -> %s" % (preprocessor.include_once,
+                                       preprocessor.defines))
+
+    def test_fullfile_guard_ifndef_skip(self):
+        f_obj = FakeFile("header.h", ["""#include "other.h"\n""",
+                                      "#define X\n",
+                                      "done\n"])
+        handler = FakeHandler({"other.h": [
+            "#ifndef X\n",
             "#endif\n"]})
         preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual(list(ret), ["done\n"])
-        self.assertTrue(preprocessor.skip_file("other.h"))
+        self.assertTrue(preprocessor.skip_file("other.h"),
+                        "%s -> %s" % (preprocessor.include_once,
+                                      preprocessor.defines))
 
-    def test_fullfile_guard_ifndef(self):
+    def test_fullfile_guard_ifndef_noskip(self):
         f_obj = FakeFile("header.h", ["""#include "other.h"\n""",
                                       "done\n"])
         handler = FakeHandler({"other.h": [
             "#ifndef X\n",
-            "#define X\n",
             "#endif\n"]})
         preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual(list(ret), ["done\n"])
-        self.assertTrue(preprocessor.skip_file("other.h"))
+        self.assertFalse(preprocessor.skip_file("other.h"),
+                         "%s -> %s" % (preprocessor.include_once,
+                                       preprocessor.defines))
 
     def test_no_fullfile_guard_ifdef(self):
         f_obj = FakeFile("header.h", ["#define X\n",
@@ -399,7 +428,10 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual(list(ret), ["foo\n", "done\n"])
-        self.assertFalse(preprocessor.skip_file("other.h"))
+        self.assertEqual({}, preprocessor.include_once)
+        self.assertFalse(preprocessor.skip_file("other.h"),
+                         "%s -> %s" % (preprocessor.include_once,
+                                       preprocessor.defines))
 
     def test_no_fullfile_guard_ifndef(self):
         f_obj = FakeFile("header.h", ["""#include "other.h"\n""",
@@ -412,7 +444,10 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual(list(ret), ["foo\n", "done\n"])
-        self.assertFalse(preprocessor.skip_file("other.h"))
+        self.assertEqual({}, preprocessor.include_once)
+        self.assertFalse(preprocessor.skip_file("other.h"),
+                         "%s -> %s" % (preprocessor.include_once,
+                                       preprocessor.defines))
 
     def test_platform_constants(self):
         f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',

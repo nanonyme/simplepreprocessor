@@ -89,7 +89,10 @@ def calculate_platform_constants():
 
 PLATFORM_CONSTANTS = calculate_platform_constants()
 DEFAULT_LINE_ENDING = "\n"
-PRAGMA_ONCE = object()
+PRAGMA_ONCE = "pragma_once"
+IFDEF = "ifdef"
+IFNDEF = "ifndef"
+ELSE = "else"
 
 
 class Preprocessor(object):
@@ -105,6 +108,7 @@ class Preprocessor(object):
         self.ignore = False
         self.ml_define = None
         self.line_ending = line_ending
+        self.last_constraint = None
         self.header_stack = []
         if header_handler is None:
             self.headers = HeaderHandler(include_paths)
@@ -136,22 +140,24 @@ class Preprocessor(object):
         self.verify_no_ml_define()
         if not self.constraints:
             raise ParseError("Unexpected #endif on line %s" % line_num)
-        _, ignore, _ = self.constraints.pop()
+        (constraint_type, constraint, ignore,
+         original_line_num) = self.constraints.pop()
         if ignore:
             self.ignore = False
+        self.last_constraint = constraint, constraint_type, original_line_num
 
     def process_else(self, line, line_num):
         self.verify_no_ml_define()
         if not self.constraints:
             raise ParseError("Unexpected #else on line %s" % line_num)
-        constraint, ignore, _ = self.constraints.pop()
+        _, constraint, ignore, _ = self.constraints.pop()
         if self.ignore and ignore:
             ignore = False
             self.ignore = False
         elif not self.ignore and not ignore:
             ignore = True
             self.ignore = True
-        self.constraints.append((constraint, ignore, line_num))
+        self.constraints.append((ELSE, constraint, ignore, line_num))
 
     def process_ifdef(self, line, line_num):
         self.verify_no_ml_define()
@@ -161,9 +167,9 @@ class Preprocessor(object):
             raise ValueError(repr(line))
         if not self.ignore and condition not in self.defines:
             self.ignore = True
-            self.constraints.append((condition, True, line_num))
+            self.constraints.append((IFDEF, condition, True, line_num))
         else:
-            self.constraints.append((condition, False, line_num))
+            self.constraints.append((IFDEF, condition, False, line_num))
 
     def process_pragma(self, line, line_num):
         self.verify_no_ml_define()
@@ -187,9 +193,9 @@ class Preprocessor(object):
         _, condition = line.split(" ")
         if not self.ignore and condition in self.defines:
             self.ignore = True
-            self.constraints.append((condition, True, line_num))
+            self.constraints.append((IFNDEF, condition, True, line_num))
         else:
-            self.constraints.append((condition, False, line_num))
+            self.constraints.append((IFNDEF, condition, False, line_num))
 
     def process_undef(self, line, line_num):
         self.verify_no_ml_define()
@@ -232,11 +238,19 @@ class Preprocessor(object):
             return self._recursive_transform(line, matches)
 
     def skip_file(self, name):
-        constraint = self.include_once.get(name)
-        if constraint is PRAGMA_ONCE:
+        item = self.include_once.get(name)
+        if item is PRAGMA_ONCE:
             return True
-        else:
+        elif item is None:
             return False
+        else:
+            constraint, constraint_type = item
+            if constraint_type == IFDEF:
+                return constraint not in self.defines
+            elif constraint_type == IFNDEF:
+                return constraint in self.defines
+            else:
+                raise Exception("Bug, constraint type %s" % constraint_type)
 
     def process_include(self, line, line_num):
         _, item = line.split(" ", 1)
@@ -267,6 +281,14 @@ class Preprocessor(object):
             raise ParseError("Invalid macro %s on line %s" % (line,
                                                               line_num))
 
+    def check_fullfile_guard(self):
+        if self.last_constraint is None:
+            return
+        constraint, constraint_type, begin = self.last_constraint
+        if begin != 0:
+            return
+        self.include_once[self.current_name()] = constraint, constraint_type
+
     def preprocess(self, f_object, depth=0):
         self.header_stack.append(f_object)
         for line_num, line in enumerate(f_object):
@@ -274,6 +296,8 @@ class Preprocessor(object):
             maybe_macro, _, _ = line.partition("//")
             maybe_macro = maybe_macro.strip("\t ")
             first_item = maybe_macro.split(" ", 1)[0]
+            if line:
+                self.last_constraint = None
             if first_item.startswith("#"):
                 macro = getattr(self, "process_%s" % first_item[1:], None)
                 if macro is None:
@@ -288,13 +312,16 @@ class Preprocessor(object):
                 self.process_ml_define(line, line_num)
             elif not self.ignore:
                 yield self.process_source_line(line, line_num)
+        self.check_fullfile_guard()
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
-            name, constraint_type, line_num = self.constraints[-1]
-            if constraint_type:
+            constraint_type, name, _, line_num = self.constraints[-1]
+            if constraint_type is IFDEF:
                 fmt = "#ifdef %s from line %s left open"
-            else:
+            elif constraint_type is IFNDEF:
                 fmt = "#ifndef %s from line %s left open"
+            else:
+                fmt = "#else from line %s left open"
             raise ParseError(fmt % (name, line_num))
 
 
