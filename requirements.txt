@@ -1,3 +1,5 @@
 flake8
 setuptools_scm
 twine
+setuptools>=12
+wheel
