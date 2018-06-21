@@ -44,11 +44,16 @@ class FakeHandler(simplecpreprocessor.HeaderHandler):
 class ProfilerMixin(object):
     @classmethod
     def setUpClass(cls):
-        cls.profiler = cProfile.Profile()
-        cls.profiler.enable()
+        if "PROFILE" in os.environ:
+            cls.profiler = cProfile.Profile()
+            cls.profiler.enable()
+        else:
+            cls.profiler = None
 
     @classmethod
     def tearDownClass(cls):
+        if profiler is None:
+            return
         cls.profiler.disable()
         p = Stats(cls.profiler)
         p.strip_dirs()
