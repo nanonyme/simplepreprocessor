@@ -101,6 +101,7 @@ IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
 
+
 class Preprocessor(object):
 
     def __init__(self, line_ending=DEFAULT_LINE_ENDING, include_paths=(),
@@ -268,7 +269,7 @@ class Preprocessor(object):
                 f = self.headers.open_header(header, self.skip_file)
                 if f is None:
                     raise ParseError(s)
-                elif not f is SKIP_FILE:
+                elif f is not SKIP_FILE:
                     with f:
                         for line in self.preprocess(f):
                             yield line
@@ -279,13 +280,14 @@ class Preprocessor(object):
                                                    self.skip_file)
                 if f is None:
                     raise ParseError(s)
-                elif not f is SKIP_FILE:
+                elif f is not SKIP_FILE:
                     with f:
                         for line in self.preprocess(f):
                             yield line
         else:
             raise ParseError("Invalid macro %s on line %s" % (line,
                                                               line_num))
+
     def check_fullfile_guard(self):
         if self.last_constraint is None:
             return
