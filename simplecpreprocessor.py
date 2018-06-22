@@ -234,15 +234,17 @@ class Preprocessor(object):
 
     def _recursive_transform(self, line, matches):
         original_line = line
+        new_matches = set()
 
         def transform_word(match):
             word = match.group(0)
             if word in matches:
                 return word
             else:
-                matches.add(word)
+                new_matches.add(word)
                 return self.defines.get(word, word)
         line = re.sub(r"\b\w+\b", transform_word, line)
+        matches.update(new_matches)
         if original_line == line:
             return line
         else:

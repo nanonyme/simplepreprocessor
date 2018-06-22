@@ -468,3 +468,10 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             self.assertEqual(os.fstat(f_obj.fileno()).st_ino,
                              file_info.st_ino)
             self.assertEqual(f_obj.name, __file__)
+
+    def test_repeated_macro(self):
+        f_obj = FakeFile("header.h", ['A A\n', ])
+        const = {"A": "value"}
+        ret = simplecpreprocessor.preprocess(f_obj,
+                                             platform_constants=const)
+        self.assertEqual(list(ret), ["value value\n"])
