@@ -21,10 +21,13 @@ class HeaderHandler(object):
 
     def __init__(self, include_paths):
         self.include_paths = list(include_paths)
+        self.resolved = {}
 
-    def open_local_header(self, current_header, include_header):
+    def open_local_header(self, current_header, include_header, skip_file):
         header_path = os.path.join(os.path.dirname(current_header),
                                    include_header)
+        if skip_file(header_path):
+            return SKIP_FILE
         return self._open(header_path)
 
     def _open(self, header_path):
@@ -38,11 +41,14 @@ class HeaderHandler(object):
     def add_include_paths(self, include_paths):
         self.include_paths.extend(include_paths)
 
-    def open_header(self, include_header):
+    def open_header(self, include_header, skip_file):
+        if skip_file(self.resolved.get(include_header)):
+            return SKIP_FILE
         for include_path in self.include_paths:
             header_path = os.path.join(include_path, include_header)
             f = self._open(os.path.normpath(header_path))
             if f:
+                self.resolved[include_header] = f.name
                 break
         return f
 
@@ -93,7 +99,7 @@ PRAGMA_ONCE = "pragma_once"
 IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
-
+SKIP_FILE = object()
 
 class Preprocessor(object):
 
@@ -259,28 +265,27 @@ class Preprocessor(object):
         if item.startswith("<") and item.endswith(">"):
             header = item.strip("<>")
             if header not in self.ignore_headers:
-                f = self.headers.open_header(header)
+                f = self.headers.open_header(header, self.skip_file)
                 if f is None:
                     raise ParseError(s)
-                with f:
-                    if not self.skip_file(f.name):
+                elif not f is SKIP_FILE:
+                    with f:
                         for line in self.preprocess(f):
                             yield line
         elif item.startswith('"') and item.endswith('"'):
-            current = self.header_stack[-1]
             header = item.strip('"')
             if header not in self.ignore_headers:
-                f = self.headers.open_local_header(current.name, header)
+                f = self.headers.open_local_header(self.current_name(), header,
+                                                   self.skip_file)
                 if f is None:
                     raise ParseError(s)
-                with f:
-                    if not self.skip_file(f.name):
+                elif not f is SKIP_FILE:
+                    with f:
                         for line in self.preprocess(f):
                             yield line
         else:
             raise ParseError("Invalid macro %s on line %s" % (line,
                                                               line_num))
-
     def check_fullfile_guard(self):
         if self.last_constraint is None:
             return
