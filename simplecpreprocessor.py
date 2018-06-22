@@ -274,7 +274,7 @@ class Preprocessor(object):
                 if f is None:
                     raise ParseError(s)
                 with f:
-                    if f.name not in self.include_once:
+                    if not self.skip_file(f.name):
                         for line in self.preprocess(f):
                             yield line
         else:
