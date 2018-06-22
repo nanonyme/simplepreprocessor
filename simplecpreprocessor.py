@@ -42,8 +42,12 @@ class HeaderHandler(object):
         self.include_paths.extend(include_paths)
 
     def open_header(self, include_header, skip_file):
-        if skip_file(self.resolved.get(include_header)):
-            return SKIP_FILE
+        header_path = self.resolved.get(include_header)
+        if header_path is not None:
+            if skip_file(header_path):
+                return SKIP_FILE
+            else:
+                return self._open(header_path)
         for include_path in self.include_paths:
             header_path = os.path.join(include_path, include_header)
             f = self._open(os.path.normpath(header_path))
