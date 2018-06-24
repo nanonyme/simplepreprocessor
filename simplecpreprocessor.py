@@ -106,6 +106,7 @@ ELSE = "else"
 SKIP_FILE = object()
 TOKEN = re.compile(r"\b\w+\b")
 
+
 class Preprocessor(object):
 
     def __init__(self, line_ending=DEFAULT_LINE_ENDING, include_paths=(),
@@ -232,7 +233,6 @@ class Preprocessor(object):
         return line + self.line_ending
 
     def _recursive_transform(self, line, seen):
-        original_line = line
 
         def transform_word(match):
             word = match.group(0)
