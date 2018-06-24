@@ -112,20 +112,20 @@ class TokenExpander(object):
         self.defines = defines
 
     def expand_tokens(self, line, seen=()):
+        def helper(match):
+            return self._replace_tokens(match.group(0),
+                                        seen)
+        return TOKEN.sub(helper, line)
 
-        def replace_tokens(match):
-            word = match.group(0)
-            if word in seen:
-                return word
-            else:
-                local_seen = {word}
-                local_seen.update(seen)
-                word = self.defines.get(word, word)
-                return self.expand_tokens(word,
-                                           local_seen)        
+    def _replace_tokens(self, word, seen):
+        if word in seen:
+            return word
+        else:
+            local_seen = {word}
+            local_seen.update(seen)
+            word = self.defines.get(word, word)
+            return self.expand_tokens(word, local_seen)
 
-        return TOKEN.sub(replace_tokens, line)
-        
 
 class Preprocessor(object):
 
