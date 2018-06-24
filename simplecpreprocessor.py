@@ -107,6 +107,26 @@ SKIP_FILE = object()
 TOKEN = re.compile(r"\b\w+\b")
 
 
+class TokenExpander(object):
+    def __init__(self, defines):
+        self.defines = defines
+
+    def expand_tokens(self, line, seen=()):
+        def helper(match):
+            return self._replace_tokens(match, seen)
+        return TOKEN.sub(helper, line)
+
+    def _replace_tokens(self, match, seen):
+        word = match.group(0)
+        if word in seen:
+            return word
+        else:
+            local_seen = {word}
+            local_seen.update(seen)
+            word = self.defines.get(word, word)
+            return self.expand_tokens(word, local_seen)
+
+
 class Preprocessor(object):
 
     def __init__(self, line_ending=DEFAULT_LINE_ENDING, include_paths=(),
@@ -122,6 +142,7 @@ class Preprocessor(object):
         self.line_ending = line_ending
         self.last_constraint = None
         self.header_stack = []
+        self.token_expander = TokenExpander(self.defines)
         if header_handler is None:
             self.headers = HeaderHandler(include_paths)
         else:
@@ -229,22 +250,8 @@ class Preprocessor(object):
             self.process_define(define, old_line_num)
 
     def process_source_line(self, line, line_num):
-        line = self._recursive_transform(line, set())
+        line = self.token_expander.expand_tokens(line)
         return line + self.line_ending
-
-    def _recursive_transform(self, line, seen):
-
-        def transform_word(match):
-            word = match.group(0)
-            if word in seen:
-                return word
-            else:
-                local_seen = {word}
-                local_seen.update(seen)
-                word = self.defines.get(word, word)
-                return self._recursive_transform(word, local_seen)
-
-        return TOKEN.sub(transform_word, line)
 
     def skip_file(self, name):
         item = self.include_once.get(name)
