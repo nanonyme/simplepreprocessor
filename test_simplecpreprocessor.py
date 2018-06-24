@@ -272,6 +272,27 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
                                              header_handler=handler)
         self.assertEqual(list(ret), ["1\n"])
 
+    def test_include_local_precedence(self):
+        other_header = "other.h"
+        path = "bogus"
+        f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
+        handler = FakeHandler({other_header: ["1\n"],
+                               "%s/%s" % (path, other_header): ["2\n"]},
+                              include_paths=[path])
+        ret = simplecpreprocessor.preprocess(f_obj,
+                                             header_handler=handler)
+        self.assertEqual(list(ret), ["1\n"])
+
+    def test_include_local_fallback(self):
+        other_header = "other.h"
+        path = "bogus"
+        f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
+        handler = FakeHandler({"%s/%s" % (path, other_header): ["2\n"]},
+                              include_paths=[path])
+        ret = simplecpreprocessor.preprocess(f_obj,
+                                             header_handler=handler)
+        self.assertEqual(list(ret), ["2\n"])
+
     def test_ifdef_file_guard(self):
         other_header = "somedirectory/other.h"
         f_obj = FakeFile("header.h",

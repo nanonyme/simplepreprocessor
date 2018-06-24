@@ -23,13 +23,6 @@ class HeaderHandler(object):
         self.include_paths = list(include_paths)
         self.resolved = {}
 
-    def open_local_header(self, current_header, include_header, skip_file):
-        header_path = os.path.join(os.path.dirname(current_header),
-                                   include_header)
-        if skip_file(header_path):
-            return SKIP_FILE
-        return self._open(header_path)
-
     def _open(self, header_path):
         try:
             f = open(header_path)
@@ -41,14 +34,20 @@ class HeaderHandler(object):
     def add_include_paths(self, include_paths):
         self.include_paths.extend(include_paths)
 
-    def open_header(self, include_header, skip_file):
+    def _resolve(self, anchor_file):
+        if anchor_file is not None:
+            yield os.path.dirname(anchor_file)
+        for include_path in self.include_paths:
+            yield include_path
+
+    def open_header(self, include_header, skip_file, anchor_file):
         header_path = self.resolved.get(include_header)
         if header_path is not None:
             if skip_file(header_path):
                 return SKIP_FILE
             else:
                 return self._open(header_path)
-        for include_path in self.include_paths:
+        for include_path in self._resolve(anchor_file):
             header_path = os.path.join(include_path, include_header)
             f = self._open(os.path.normpath(header_path))
             if f:
@@ -268,31 +267,27 @@ class Preprocessor(object):
             else:
                 raise Exception("Bug, constraint type %s" % constraint_type)
 
+    def _read_header(self, header, error, anchor_file=None):
+        if header not in self.ignore_headers:
+            f = self.headers.open_header(header, self.skip_file, anchor_file)
+            if f is None:
+                raise error
+            elif f is not SKIP_FILE:
+                with f:
+                    for line in self.preprocess(f):
+                        yield line
+
     def process_include(self, line, line_num):
         _, item = line.split(" ", 1)
         s = "%s on line %s includes a file that can't be found" % (line,
                                                                    line_num)
+        error = ParseError(s)
         if item.startswith("<") and item.endswith(">"):
             header = item.strip("<>")
-            if header not in self.ignore_headers:
-                f = self.headers.open_header(header, self.skip_file)
-                if f is None:
-                    raise ParseError(s)
-                elif f is not SKIP_FILE:
-                    with f:
-                        for line in self.preprocess(f):
-                            yield line
+            return self._read_header(header, error)
         elif item.startswith('"') and item.endswith('"'):
             header = item.strip('"')
-            if header not in self.ignore_headers:
-                f = self.headers.open_local_header(self.current_name(), header,
-                                                   self.skip_file)
-                if f is None:
-                    raise ParseError(s)
-                elif f is not SKIP_FILE:
-                    with f:
-                        for line in self.preprocess(f):
-                            yield line
+            return self._read_header(header, error, self.current_name())
         else:
             raise ParseError("Invalid macro %s on line %s" % (line,
                                                               line_num))
