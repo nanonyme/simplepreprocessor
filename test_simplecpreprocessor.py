@@ -278,7 +278,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
         handler = FakeHandler({other_header: ["1\n"],
                                "%s/%s" % (path, other_header): ["2\n"]},
-                               include_paths=[path])
+                              include_paths=[path])
         ret = simplecpreprocessor.preprocess(f_obj,
                                              header_handler=handler)
         self.assertEqual(list(ret), ["1\n"])
@@ -288,7 +288,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         path = "bogus"
         f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
         handler = FakeHandler({"%s/%s" % (path, other_header): ["2\n"]},
-                               include_paths=[path])
+                              include_paths=[path])
         ret = simplecpreprocessor.preprocess(f_obj,
                                              header_handler=handler)
         self.assertEqual(list(ret), ["2\n"])
