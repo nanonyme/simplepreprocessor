@@ -104,7 +104,7 @@ IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
-
+TOKEN = re.compile(r"\b\w+\b")
 
 class Preprocessor(object):
 
@@ -228,27 +228,23 @@ class Preprocessor(object):
             self.process_define(define, old_line_num)
 
     def process_source_line(self, line, line_num):
-        matches = set()
-        line = self._recursive_transform(line, matches)
+        line = self._recursive_transform(line, set())
         return line + self.line_ending
 
-    def _recursive_transform(self, line, matches):
+    def _recursive_transform(self, line, seen):
         original_line = line
-        new_matches = set()
 
         def transform_word(match):
             word = match.group(0)
-            if word in matches:
+            if word in seen:
                 return word
             else:
-                new_matches.add(word)
-                return self.defines.get(word, word)
-        line = re.sub(r"\b\w+\b", transform_word, line)
-        matches.update(new_matches)
-        if original_line == line:
-            return line
-        else:
-            return self._recursive_transform(line, matches)
+                local_seen = {word}
+                local_seen.update(seen)
+                word = self.defines.get(word, word)
+                return self._recursive_transform(word, local_seen)
+
+        return TOKEN.sub(transform_word, line)
 
     def skip_file(self, name):
         item = self.include_once.get(name)
