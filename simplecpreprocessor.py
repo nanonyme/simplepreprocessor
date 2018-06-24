@@ -113,11 +113,11 @@ class TokenExpander(object):
 
     def expand_tokens(self, line, seen=()):
         def helper(match):
-            return self._replace_tokens(match.group(0),
-                                        seen)
+            return self._replace_tokens(match, seen)
         return TOKEN.sub(helper, line)
 
-    def _replace_tokens(self, word, seen):
+    def _replace_tokens(self, match, seen):
+        word = match.group(0)
         if word in seen:
             return word
         else:
