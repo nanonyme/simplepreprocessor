@@ -120,10 +120,12 @@ class TokenExpander(object):
         if word in seen:
             return word
         else:
+            new_word = self.defines.get(word, word)
+            if new_word == word:
+                return new_word
             local_seen = {word}
             local_seen.update(seen)
-            word = self.defines.get(word, word)
-            return self.expand_tokens(word, local_seen)
+            return self.expand_tokens(new_word, local_seen)
 
 
 class Preprocessor(object):
