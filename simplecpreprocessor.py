@@ -117,12 +117,10 @@ class TokenExpander(object):
 
     def _replace_tokens(self, match, seen):
         word = match.group(0)
-        if word in seen:
+        new_word = self.defines.get(word, word)
+        if new_word == word or word in seen:
             return word
         else:
-            new_word = self.defines.get(word, word)
-            if new_word == word:
-                return new_word
             local_seen = {word}
             local_seen.update(seen)
             return self.expand_tokens(new_word, local_seen)
