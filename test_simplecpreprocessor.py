@@ -97,6 +97,14 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         expected_list = ["(4 + (2 * x))\n", "(2 * (4 + y))\n"]
         self.run_case(f_obj, expected_list)
 
+    def test_define_indirect_self_reference_multiple(self):
+        f_obj = FakeFile("header.h", ["#define I 1\n",
+                                      "#define J I + 2\n",
+                                      "#define K I + J\n",
+                                      "I\n", "J\n", "K\n"])
+        expected_list = ["1\n", "1 + 2\n", "1 + 1 + 2\n"]
+        self.run_case(f_obj, expected_list)
+
     def test_partial_match(self):
         f_obj = FakeFile("header.h", [
             "#define FOO\n",
