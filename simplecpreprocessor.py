@@ -137,7 +137,6 @@ class Preprocessor(object):
         self.defines.update(platform_constants)
         self.constraints = []
         self.ignore = False
-        self.ml_define = None
         self.line_ending = line_ending
         self.last_constraint = None
         self.header_stack = []
@@ -148,22 +147,29 @@ class Preprocessor(object):
             self.headers = header_handler
             self.headers.add_include_paths(include_paths)
 
-    def verify_no_ml_define(self):
-        if self.ml_define:
-            define, line_num = self.ml_define
-            s = ("Error, expected multiline define %s on "
-                 "line %s to be continued")
-            raise ParseError(s % (define, line_num))
-
     def process_define(self, **kwargs):
-        line = kwargs["line"]
-        line_num = kwargs["line_num"]
         if self.ignore:
             return
-        self.verify_no_ml_define()
+        line = kwargs["line"]
+        line_num = kwargs["line_num"]
+        s = ("Unexpected macro %s on line %s, should be continuation"
+             "of define from line %s")
+        original_line_num = line_num
         if line.endswith("\\"):
-            self.ml_define = line[:-1].rstrip(" \t"), line_num
-            return
+            header_file = kwargs["header_file"]
+            lines = [line[:-1].strip()]
+            for line_num, line in header_file:
+                line = line.rstrip("\r\n")
+                if line.startswith("#"):
+                    raise ParseError(s % (line, line_num,
+                                          original_line_num))
+                else:
+                    if line.endswith("\\"):
+                        lines.append(line[:-1].strip())
+                    else:
+                        lines.append(line.strip())
+                        break
+            line = " ".join(line for line in lines)
         define = line.split(" ", 2)[1:]
         if len(define) == 1:
             self.defines[define[0]] = ""
@@ -172,7 +178,6 @@ class Preprocessor(object):
 
     def process_endif(self, **kwargs):
         line_num = kwargs["line_num"]
-        self.verify_no_ml_define()
         if not self.constraints:
             raise ParseError("Unexpected #endif on line %s" % line_num)
         (constraint_type, constraint, ignore,
@@ -183,7 +188,6 @@ class Preprocessor(object):
 
     def process_else(self, **kwargs):
         line_num = kwargs["line_num"]
-        self.verify_no_ml_define()
         if not self.constraints:
             raise ParseError("Unexpected #else on line %s" % line_num)
         _, constraint, ignore, _ = self.constraints.pop()
@@ -198,7 +202,6 @@ class Preprocessor(object):
     def process_ifdef(self, **kwargs):
         line = kwargs["line"]
         line_num = kwargs["line_num"]
-        self.verify_no_ml_define()
         try:
             _, condition = line.split(" ")
         except ValueError:
@@ -212,7 +215,6 @@ class Preprocessor(object):
     def process_pragma(self, **kwargs):
         line = kwargs["line"]
         line_num = kwargs["line"]
-        self.verify_no_ml_define()
         _, _, pragma_name = line.partition(" ")
         method_name = "process_pragma_%s" % pragma_name
         pragma = getattr(self, method_name, None)
@@ -231,7 +233,6 @@ class Preprocessor(object):
     def process_ifndef(self, **kwargs):
         line = kwargs["line"]
         line_num = kwargs["line_num"]
-        self.verify_no_ml_define()
         _, condition = line.split(" ")
         if not self.ignore and condition in self.defines:
             self.ignore = True
@@ -241,24 +242,11 @@ class Preprocessor(object):
 
     def process_undef(self, **kwargs):
         line = kwargs["line"]
-        self.verify_no_ml_define()
         _, undefine = line.split(" ")
         try:
             del self.defines[undefine]
         except KeyError:
             pass
-
-    def process_ml_define(self, **kwargs):
-        line = kwargs["line"]
-        if self.ignore:
-            return
-        define, old_line_num = self.ml_define
-        define = "%s %s" % (define, line.lstrip(" \t"))
-        if define.endswith("\\"):
-            self.ml_define = define[:-1], old_line_num
-        else:
-            self.ml_define = None
-            self.process_define(line=define, line_num=old_line_num)
 
     def process_source_line(self, **kwargs):
         line = kwargs["line"]
@@ -317,7 +305,8 @@ class Preprocessor(object):
 
     def preprocess(self, f_object, depth=0):
         self.header_stack.append(f_object)
-        for line_num, line in enumerate(f_object):
+        header_file = enumerate(f_object)
+        for line_num, line in header_file:
             line = line.rstrip("\r\n")
             maybe_macro, _, _ = line.partition("//")
             maybe_macro = maybe_macro.strip("\t ")
@@ -330,12 +319,11 @@ class Preprocessor(object):
                     fmt = "%s on line %s contains unsupported macro"
                     raise ParseError(fmt % (line, line_num))
                 else:
-                    ret = macro(line=maybe_macro, line_num=line_num)
+                    ret = macro(line=maybe_macro, line_num=line_num,
+                                header_file=header_file)
                     if ret is not None:
                         for line in ret:
                             yield line
-            elif self.ml_define:
-                self.process_ml_define(line=line, line_num=line_num)
             elif not self.ignore:
                 yield self.process_source_line(line=line, line_num=line_num)
         self.check_fullfile_guard()
