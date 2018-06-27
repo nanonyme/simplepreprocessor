@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import unittest
-import simplecpreprocessor
+import simplecpreprocessor.core as simplecpreprocessor
 import posixpath
 import os
 import cProfile
