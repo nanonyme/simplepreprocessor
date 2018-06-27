@@ -16,7 +16,7 @@ setup(
     use_scm_version=True,
     entry_points={
         "console_scripts": [
-            "simplecpreprocessor = simplecpreprocessor:main"
+            "simplecpreprocessor = simplecpreprocessor.core:main"
         ]
     },
     classifiers=[
