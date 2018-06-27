@@ -11,7 +11,7 @@ setup(
     keywords="python c preprocessor",
     license="BSD",
     url="https://github.com/nanonyme/simplecpreprocessor",
-    py_modules=["simplecpreprocessor"],
+    packages=["simplecpreprocessor"],
     long_description=long_description,
     use_scm_version=True,
     entry_points={
