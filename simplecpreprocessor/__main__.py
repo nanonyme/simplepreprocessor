@@ -1,2 +1,2 @@
-from simplecpreprocessor import main
+from simplecpreprocessor.core import main
 main()

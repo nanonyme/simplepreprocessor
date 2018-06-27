@@ -1,2 +1,2 @@
-from simplecpreprocessor.core import preprocess, main
-__all__ = ["preprocess", "main"]
+from simplecpreprocessor.core import preprocess
+__all__ = ["preprocess"]
