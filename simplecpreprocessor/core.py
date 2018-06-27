@@ -106,7 +106,7 @@ class TokenExpander(object):
     def expand_tokens(self, line, seen=()):
         def helper(match):
             return self._replace_tokens(match, seen)
-        return TOKEN.sub(helper, line)
+        yield TOKEN.sub(helper, line)
 
     def _replace_tokens(self, match, seen):
         word = match.group(0)
@@ -116,7 +116,7 @@ class TokenExpander(object):
         else:
             local_seen = {word}
             local_seen.update(seen)
-            return self.expand_tokens(new_word, local_seen)
+            return "".join(self.expand_tokens(new_word, local_seen))
 
 
 class Preprocessor(object):
@@ -243,8 +243,9 @@ class Preprocessor(object):
 
     def process_source_line(self, **kwargs):
         line = kwargs["line"]
-        line = self.token_expander.expand_tokens(line)
-        return line + self.line_ending
+        for chunk in self.token_expander.expand_tokens(line):
+            yield chunk
+        yield self.line_ending
 
     def skip_file(self, name):
         item = self.include_once.get(name)
@@ -318,7 +319,9 @@ class Preprocessor(object):
                         for line in ret:
                             yield line
             elif not self.ignore:
-                yield self.process_source_line(line=line, line_num=line_num)
+                for chunk in self.process_source_line(line=line,
+                                                      line_num=line_num):
+                    yield chunk
         self.check_fullfile_guard()
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
