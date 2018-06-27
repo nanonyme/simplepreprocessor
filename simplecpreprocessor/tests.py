@@ -69,9 +69,16 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
     def test_define(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
                                       "FOO"])
-        expected_list = "1\n"
-        self.run_case(f_obj, expected_list)
+        expected = "1\n"
+        self.run_case(f_obj, expected)
 
+    def test_define(self):
+        f_obj = FakeFile("header.h", ["#define FOO 1\n",
+                                      '"FOO"'])
+        expected = '"FOO"\n'
+        self.run_case(f_obj, expected)                        
+
+        
     def test_multiline_define(self):
         f_obj = FakeFile("header.h", ["#define FOO \\\n",
                                       "\t1\n",
