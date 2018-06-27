@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import unittest
 import simplecpreprocessor
-import os.path
+import posixpath
 import os
 import cProfile
 from pstats import Stats
@@ -320,8 +320,8 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def test_include_with_path_list(self):
         f_obj = FakeFile("header.h", ['#include <other.h>\n'])
-        handler = FakeHandler({os.path.join("subdirectory",
-                                            "other.h"): ["1\n"]})
+        handler = FakeHandler({posixpath.join("subdirectory",
+                                              "other.h"): ["1\n"]})
         include_paths = ["subdirectory"]
         ret = simplecpreprocessor.preprocess(f_obj,
                                              include_paths=include_paths,
@@ -343,11 +343,11 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         self.run_case(f_obj, expected_list)
 
     def test_include_with_path_list_with_subdirectory(self):
-        header_file = os.path.join("nested", "other.h")
+        header_file = posixpath.join("nested", "other.h")
         include_path = "somedir"
         f_obj = FakeFile("header.h", ['#include <%s>\n' % header_file])
-        handler = FakeHandler({os.path.join(include_path,
-                                            header_file): ["1\n"]})
+        handler = FakeHandler({posixpath.join(include_path,
+                                              header_file): ["1\n"]})
         include_paths = [include_path]
         ret = simplecpreprocessor.preprocess(f_obj,
                                              include_paths=include_paths,
@@ -355,7 +355,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         self.assertEqual(list(ret), ["1\n"])
 
     def test_include_missing_local_file(self):
-        other_header = os.path.join("somedirectory", "other.h")
+        other_header = posixpath.join("somedirectory", "other.h")
         f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
         handler = FakeHandler({})
         with self.assertRaises(simplecpreprocessor.ParseError):
@@ -365,8 +365,8 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def test_ignore_include_path(self):
         f_obj = FakeFile("header.h", ['#include <other.h>\n'])
-        handler = FakeHandler({os.path.join("subdirectory",
-                                            "other.h"): ["1\n"]})
+        handler = FakeHandler({posixpath.join("subdirectory",
+                                              "other.h"): ["1\n"]})
         paths = ["subdirectory"]
         ignored = ["other.h"]
         ret = simplecpreprocessor.preprocess(f_obj,
