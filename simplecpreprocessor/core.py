@@ -3,12 +3,6 @@ import platform
 import re
 import argparse
 import posixpath
-from pkg_resources import get_distribution, DistributionNotFound
-try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
-    from setuptools_scm import get_version
-    __version__ = get_version()
 
 logger = logging.getLogger(__name__)
 
@@ -370,7 +364,3 @@ def main(args=None):
             for line in preprocess(i, include_paths=args.include_paths,
                                    ignore_headers=args.ignore_headers):
                 o.write(line)
-
-
-if __name__ == "__main__":
-    main()
