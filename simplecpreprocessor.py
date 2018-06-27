@@ -1,8 +1,8 @@
 import logging
-import os.path
 import platform
 import re
 import argparse
+import posixpath
 from pkg_resources import get_distribution, DistributionNotFound
 try:
     __version__ = get_distribution(__name__).version
@@ -36,7 +36,7 @@ class HeaderHandler(object):
 
     def _resolve(self, anchor_file):
         if anchor_file is not None:
-            yield os.path.dirname(anchor_file)
+            yield posixpath.dirname(anchor_file)
         for include_path in self.include_paths:
             yield include_path
 
@@ -48,8 +48,8 @@ class HeaderHandler(object):
             else:
                 return self._open(header_path)
         for include_path in self._resolve(anchor_file):
-            header_path = os.path.join(include_path, include_header)
-            f = self._open(os.path.normpath(header_path))
+            header_path = posixpath.join(include_path, include_header)
+            f = self._open(posixpath.normpath(header_path))
             if f:
                 self.resolved[include_header] = f.name
                 break
@@ -348,10 +348,6 @@ def preprocess(f_object, line_ending="\n", include_paths=(),
     preprocessor = Preprocessor(line_ending, include_paths, header_handler,
                                 platform_constants, ignore_headers)
     return preprocessor.preprocess(f_object)
-
-
-def split_paths(path):
-    return path.split(os.pathsep)
 
 
 parser = argparse.ArgumentParser()
