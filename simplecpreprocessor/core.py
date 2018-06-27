@@ -96,7 +96,7 @@ IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
-TOKEN = re.compile(r"\b\w+\b")
+TOKEN = re.compile(r"\b\w+\b|\W")
 
 
 class TokenExpander(object):
@@ -104,19 +104,15 @@ class TokenExpander(object):
         self.defines = defines
 
     def expand_tokens(self, line, seen=()):
-        def helper(match):
-            return self._replace_tokens(match, seen)
-        yield TOKEN.sub(helper, line)
-
-    def _replace_tokens(self, match, seen):
-        word = match.group(0)
-        new_word = self.defines.get(word, word)
-        if new_word == word or word in seen:
-            return word
-        else:
-            local_seen = {word}
-            local_seen.update(seen)
-            return "".join(self.expand_tokens(new_word, local_seen))
+        for token in TOKEN.findall(line):
+            if token in seen or token not in self.defines:
+                yield token
+            else:
+                new_seen = {token}
+                new_seen.update(seen)
+                token = self.defines[token]
+                for token in self.expand_tokens(token, new_seen):
+                    yield token
 
 
 class Preprocessor(object):
