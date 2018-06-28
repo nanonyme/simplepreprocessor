@@ -97,15 +97,49 @@ IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
 TOKEN = re.compile(r"\b\w+\b|\W")
+DOUBLE_QUOTE = '"'
+SINGLE_QUOTE = "'"
+CHAR = re.compile(r"^'\w'$")
 
+def _consume(tokens, buf, separator):
+    for token in tokens:
+        buf.append(token)
+        if token == separator:
+            return "".join(buf)
+
+def _handle_string(tokens):
+    buf = [DOUBLE_QUOTE]
+    return _consume(tokens, buf, DOUBLE_QUOTE)
+
+def _handle_char(tokens):
+    buf = [SINGLE_QUOTE]
+    return _consume(tokens, buf, SINGLE_QUOTE)
+
+def _tokenize(s):
+    for match in TOKEN.finditer(s):
+        yield match.group(0)
 
 class TokenExpander(object):
     def __init__(self, defines):
         self.defines = defines
 
     def expand_tokens(self, line, seen=()):
-        for token in TOKEN.findall(line):
-            if token in seen or token not in self.defines:
+        tokens = _tokenize(line)
+        for token in tokens:
+            if token in seen:
+                yield token
+                continue
+            elif token == DOUBLE_QUOTE:
+                token = _handle_string(tokens)
+                if token is None:
+                    raise ParseError("Unbalanced \"")
+            elif token == SINGLE_QUOTE:
+                token = _handle_char(tokens)
+                if token is None:
+                    raise ParseError("Unbalanced '")
+                elif not CHAR.search(token):
+                    raise ParseError("%s is not a char" % token)
+            if token not in self.defines:
                 yield token
             else:
                 new_seen = {token}

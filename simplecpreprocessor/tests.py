@@ -84,6 +84,13 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         expected = "'F'\n"
         self.run_case(f_obj, expected)
 
+    def test_char_token_error(self):
+        f_obj = FakeFile("header.h", ["#define FOO 1\n",
+                                      "'FOO'\n"])
+        expected = "'FOO'\n"
+        with self.assertRaises(simplecpreprocessor.ParseError):
+            self.run_case(f_obj, expected)
+
     def test_string_token_with_single_quote(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
                                       '"FOO\'"'])
