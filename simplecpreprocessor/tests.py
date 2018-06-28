@@ -72,10 +72,10 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         expected = "1\n"
         self.run_case(f_obj, expected)
 
-    def test_string_token_simple(self):
-        f_obj = FakeFile("header.h", ["#define FOO 1\n",
-                                      '"FOO"'])
-        expected = '"FOO"\n'
+    def test_string_token_special_characters(self):
+        line = '"!/-*+"\n'
+        f_obj = FakeFile("header.h", [line])
+        expected = line
         self.run_case(f_obj, expected)
 
     def test_char_token_simple(self):
