@@ -72,13 +72,24 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         expected = "1\n"
         self.run_case(f_obj, expected)
 
-    def test_define(self):
+    def test_string_token_simple(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
                                       '"FOO"'])
         expected = '"FOO"\n'
-        self.run_case(f_obj, expected)                        
+        self.run_case(f_obj, expected)
 
-        
+    def test_char_token_simple(self):
+        f_obj = FakeFile("header.h", ["#define F 1\n",
+                                      "'F'\n"])
+        expected = "'F'\n"
+        self.run_case(f_obj, expected)
+
+    def test_string_token_with_single_quote(self):
+        f_obj = FakeFile("header.h", ["#define FOO 1\n",
+                                      '"FOO\'"'])
+        expected = '"FOO\'"\n'
+        self.run_case(f_obj, expected)                                
+
     def test_multiline_define(self):
         f_obj = FakeFile("header.h", ["#define FOO \\\n",
                                       "\t1\n",
