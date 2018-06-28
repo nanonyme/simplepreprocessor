@@ -96,27 +96,57 @@ IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
-TOKEN = re.compile(r"\b\w+\b")
+TOKEN = re.compile(r"\b\w+\b|\W")
+DOUBLE_QUOTE = '"'
+SINGLE_QUOTE = "'"
+CHAR = re.compile(r"^'\w'$")
 
+def _consume(tokens, buf, separator):
+    for token in tokens:
+        buf.append(token)
+        if token == separator:
+            return "".join(buf)
+
+def _handle_string(tokens):
+    buf = [DOUBLE_QUOTE]
+    return _consume(tokens, buf, DOUBLE_QUOTE)
+
+def _handle_char(tokens):
+    buf = [SINGLE_QUOTE]
+    return _consume(tokens, buf, SINGLE_QUOTE)
+
+def _tokenize(s):
+    for match in TOKEN.finditer(s):
+        yield match.group(0)
 
 class TokenExpander(object):
     def __init__(self, defines):
         self.defines = defines
 
     def expand_tokens(self, line, seen=()):
-        def helper(match):
-            return self._replace_tokens(match, seen)
-        return TOKEN.sub(helper, line)
-
-    def _replace_tokens(self, match, seen):
-        word = match.group(0)
-        new_word = self.defines.get(word, word)
-        if new_word == word or word in seen:
-            return word
-        else:
-            local_seen = {word}
-            local_seen.update(seen)
-            return self.expand_tokens(new_word, local_seen)
+        tokens = _tokenize(line)
+        for token in tokens:
+            if token in seen:
+                yield token
+                continue
+            elif token == DOUBLE_QUOTE:
+                token = _handle_string(tokens)
+                if token is None:
+                    raise ParseError("Unbalanced \"")
+            elif token == SINGLE_QUOTE:
+                token = _handle_char(tokens)
+                if token is None:
+                    raise ParseError("Unbalanced '")
+                elif not CHAR.search(token):
+                    raise ParseError("%s is not a char" % token)
+            if token not in self.defines:
+                yield token
+            else:
+                new_seen = {token}
+                new_seen.update(seen)
+                token = self.defines[token]
+                for token in self.expand_tokens(token, new_seen):
+                    yield token
 
 
 class Preprocessor(object):
@@ -243,8 +273,9 @@ class Preprocessor(object):
 
     def process_source_line(self, **kwargs):
         line = kwargs["line"]
-        line = self.token_expander.expand_tokens(line)
-        return line + self.line_ending
+        for chunk in self.token_expander.expand_tokens(line):
+            yield chunk
+        yield self.line_ending
 
     def skip_file(self, name):
         item = self.include_once.get(name)
@@ -318,7 +349,9 @@ class Preprocessor(object):
                         for line in ret:
                             yield line
             elif not self.ignore:
-                yield self.process_source_line(line=line, line_num=line_num)
+                for chunk in self.process_source_line(line=line,
+                                                      line_num=line_num):
+                    yield chunk
         self.check_fullfile_guard()
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
