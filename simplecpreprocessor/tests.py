@@ -84,6 +84,11 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         expected = "'F'\n"
         self.run_case(f_obj, expected)
 
+    def test_commented_quote(self):
+        text = "// 'foo"
+        f_obj = FakeFile("header.h", [text])
+        self.run_case(f_obj, text)
+
     def test_char_token_error(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
                                       "'FOO'\n"])
