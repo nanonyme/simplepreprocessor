@@ -96,10 +96,11 @@ IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
-TOKEN = re.compile(r"\b\w+\b|\W")
+TOKEN = re.compile(r"/\*|\*/|//|\b\w+\b|\W")
 DOUBLE_QUOTE = '"'
 SINGLE_QUOTE = "'"
 CHAR = re.compile(r"^'\w'$")
+LINE_ENDING = object()
 
 def _consume(tokens, buf, separator):
     for token in tokens:
@@ -125,7 +126,27 @@ class TokenExpander(object):
 
     def expand_tokens(self, line, seen=()):
         tokens = _tokenize(line)
+        comment = None
         for token in tokens:
+            if token == "\r":
+                continue
+            elif token == "\n":
+                if comment == "//":
+                    comment = None
+                yield LINE_ENDING
+                continue
+            elif token in ("//", "/*"):
+                comment = token
+                yield token
+                continue
+            elif token == "*/":
+                if token == "/*":
+                    comment = None
+                yield token
+                continue
+            elif comment:
+                yield token
+                continue
             if token in seen:
                 yield token
                 continue
@@ -163,6 +184,7 @@ class Preprocessor(object):
         self.line_ending = line_ending
         self.last_constraint = None
         self.header_stack = []
+        self.deferred_lines = []
         self.token_expander = TokenExpander(self.defines)
         if header_handler is None:
             self.headers = HeaderHandler(include_paths)
@@ -271,11 +293,20 @@ class Preprocessor(object):
         except KeyError:
             pass
 
-    def process_source_line(self, **kwargs):
+    def defer_source_line(self, **kwargs):
         line = kwargs["line"]
-        for chunk in self.token_expander.expand_tokens(line):
-            yield chunk
-        yield self.line_ending
+        self.deferred_lines.append(line)
+
+    def process_source_lines(self):
+        if self.deferred_lines:
+            lines = "\n".join(self.deferred_lines)
+            for chunk in self.token_expander.expand_tokens(lines):
+                if chunk is LINE_ENDING:
+                    yield self.line_ending
+                else:
+                    yield chunk
+            yield self.line_ending
+            self.deferred_lines = []
 
     def skip_file(self, name):
         item = self.include_once.get(name)
@@ -338,6 +369,8 @@ class Preprocessor(object):
             if line:
                 self.last_constraint = None
             if first_item.startswith("#"):
+                for chunk in self.process_source_lines():
+                    yield chunk
                 macro = getattr(self, "process_%s" % first_item[1:], None)
                 if macro is None:
                     fmt = "%s on line %s contains unsupported macro"
@@ -349,9 +382,9 @@ class Preprocessor(object):
                         for line in ret:
                             yield line
             elif not self.ignore:
-                for chunk in self.process_source_line(line=line,
-                                                      line_num=line_num):
-                    yield chunk
+                self.defer_source_line(line=line)
+        for chunk in self.process_source_lines():
+            yield chunk
         self.check_fullfile_guard()
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
