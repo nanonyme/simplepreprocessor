@@ -85,7 +85,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         self.run_case(f_obj, expected)
 
     def test_commented_quote(self):
-        text = "// 'foo"
+        text = "// 'foo\n"
         f_obj = FakeFile("header.h", [text])
         self.run_case(f_obj, text)
 

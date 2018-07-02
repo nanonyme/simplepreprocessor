@@ -96,7 +96,7 @@ IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
-TOKEN = re.compile(r"\b\w+\b|\W")
+TOKEN = re.compile(r"//|\b\w+\b|\W")
 DOUBLE_QUOTE = '"'
 SINGLE_QUOTE = "'"
 CHAR = re.compile(r"^'\w'$")
@@ -125,7 +125,21 @@ class TokenExpander(object):
 
     def expand_tokens(self, line, seen=()):
         tokens = _tokenize(line)
+        comment = False
         for token in tokens:
+            if token == "\r":
+                continue
+            elif token == "\n":
+                comment = False
+                yield token
+                continue
+            elif token == "//":
+                comment = True
+                yield token
+                continue
+            elif comment:
+                yield token
+                continue
             if token in seen:
                 yield token
                 continue
