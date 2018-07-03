@@ -63,7 +63,8 @@ class ProfilerMixin(object):
 class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def run_case(self, input_list, expected):
-        output = "".join(simplecpreprocessor.preprocess(input_list))
+        ret = simplecpreprocessor.preprocess(input_list)
+        output = "".join(ret)
         self.assertEqual(output, expected)
 
     def test_define(self):
@@ -87,32 +88,25 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
     def test_commented_quote(self):
         text = "// 'foo\n"
         f_obj = FakeFile("header.h", [text])
-        self.run_case(f_obj, text)
+        self.run_case(f_obj, "\n")
 
     def test_multiline_commented_quote(self):
         lines = [" /* \n",
                  " 'foo */\n"]
         f_obj = FakeFile("header.h", lines)
-        self.run_case(f_obj, "".join(lines))
-
-    def test_char_token_error(self):
-        f_obj = FakeFile("header.h", ["#define FOO 1\n",
-                                      "'FOO'\n"])
-        expected = "'FOO'\n"
-        with self.assertRaises(simplecpreprocessor.ParseError):
-            self.run_case(f_obj, expected)
+        self.run_case(f_obj, " \n")
 
     def test_string_token_with_single_quote(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
                                       '"FOO\'"'])
         expected = '"FOO\'"\n'
-        self.run_case(f_obj, expected)                                
+        self.run_case(f_obj, expected)
 
     def test_multiline_define(self):
         f_obj = FakeFile("header.h", ["#define FOO \\\n",
                                       "\t1\n",
                                       "FOO\n"])
-        expected = "1\n"
+        expected = "\\\n\t1\n"
         self.run_case(f_obj, expected)
 
     def test_define_simple_self_referential(self):
@@ -224,7 +218,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         self.run_case(f_obj, expected)
 
     def test_fulfilled_ifdef_define_allowed(self):
-        f_obj = FakeFile("header.h", ["#define FOO", "#ifdef FOO\n",
+        f_obj = FakeFile("header.h", ["#define FOO\n", "#ifdef FOO\n",
                                       "#define BAR 1\n",
                                       "#endif\n", "BAR\n"])
         expected = "1\n"
@@ -342,12 +336,12 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         f_obj = FakeFile("header.h", [
             "#define FOO 1 // comment\n",
             "FOO\n"])
-        expected = "1\n"
+        expected = "1 \n"
         self.run_case(f_obj, expected)
 
     def test_ifdef_with_comment(self):
         f_obj = FakeFile("header.h", [
-            "#define FOO",
+            "#define FOO\n",
             "#ifdef FOO // comment\n",
             "1\n",
             "#endif"])
