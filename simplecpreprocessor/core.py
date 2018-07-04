@@ -155,22 +155,23 @@ class Tokenizer(object):
                     yield line_no, CHUNK_MARK
 
 
-def _tokens_to_chunks(tokens, line_ending):
-    chunk = []
-    whitespace_only = True
-    for line_no, token in tokens:
-        if token is CHUNK_MARK:
-            if chunk:
-                yield chunk
-            chunk = []
-            whitespace_only = True
-            continue
-        chunk.append((line_no, token))
-        if token == "#":
-            if whitespace_only:
-                chunk = [(line_no, "#")]
-        elif token.strip():
-            whitespace_only = False
+    def read_chunks(self):
+        tokens = iter(self)
+        chunk = []
+        whitespace_only = True
+        for line_no, token in tokens:
+            if token is CHUNK_MARK:
+                if chunk:
+                    yield chunk
+                chunk = []
+                whitespace_only = True
+                continue
+            chunk.append((line_no, token))
+            if token == "#":
+                if whitespace_only:
+                    chunk = [(line_no, "#")]
+            elif token.strip():
+                whitespace_only = False
 
 
 class Preprocessor(object):
@@ -343,7 +344,7 @@ class Preprocessor(object):
     def preprocess(self, f_object, depth=0):
         self.header_stack.append(f_object)
         tokenizer = Tokenizer(f_object, self.line_ending)
-        for chunk in _tokens_to_chunks(tokenizer, self.line_ending):
+        for chunk in tokenizer.read_chunks():
             self.last_constraint = None
             if chunk[0][1] == "#":
                 line_num = chunk[0][0]
