@@ -101,7 +101,7 @@ TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|\".+\"|'\w'|/\*|"
 DOUBLE_QUOTE = '"'
 SINGLE_QUOTE = "'"
 CHAR = re.compile(r"^'\w'$")
-
+CHUNK_MARK = object()
 
 def _tokenize(s):
     for match in TOKEN.finditer(s):
@@ -134,46 +134,43 @@ class Tokenizer(object):
     def __iter__(self):
         comment = None
         for line_no, line in self.source:
+            line = line.rstrip("\r\n")
             tokens = _tokenize(line)
+            token = None
             for token in tokens:
-                if token == "\n":
-                    if comment == "//":
-                        comment = None
-                    elif comment == "/*":
-                        continue
-                    yield line_no, self.line_ending
-                    continue
-                elif comment or token == "\r":
+                if token == "*/" and comment == "/*":
+                    comment = None
+                elif comment:
                     continue
                 elif token in ("//", "/*"):
                     comment = token
-                elif token == "*/":
-                    if token == "/*":
-                        comment = None
                 else:
                     yield line_no, token
+            if comment == "//":
+                if token != "\\":
+                    comment = None
+            if not comment:
+                yield line_no, self.line_ending
+                if token != "\\":
+                    yield line_no, CHUNK_MARK
 
 
 def _tokens_to_chunks(tokens, line_ending):
     chunk = []
-    previous = None
     whitespace_only = True
     for line_no, token in tokens:
-        chunk.append((line_no, token))
-        if token == line_ending and previous != "\\":
+        if token is CHUNK_MARK:
             if chunk:
                 yield chunk
             chunk = []
             whitespace_only = True
-        elif token == "#":
+            continue
+        chunk.append((line_no, token))
+        if token == "#":
             if whitespace_only:
                 chunk = [(line_no, "#")]
         elif token.strip():
             whitespace_only = False
-        previous = token
-    if chunk:
-        chunk.append((chunk[-1][0], line_ending))
-        yield chunk
 
 
 class Preprocessor(object):
