@@ -97,11 +97,12 @@ IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
 TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|\".+\"|'\w'|/\*|"
-                    r"\*/|//|\b\w+\b|\W"))
+                    r"\*/|//|\b\w+\b|\s+|\W"))
 DOUBLE_QUOTE = '"'
 SINGLE_QUOTE = "'"
 CHAR = re.compile(r"^'\w'$")
 CHUNK_MARK = object()
+RSTRIP = object()
 
 def _tokenize(s):
     for match in TOKEN.finditer(s):
@@ -144,6 +145,7 @@ class Tokenizer(object):
                     continue
                 elif token in ("//", "/*"):
                     comment = token
+                    yield line_no, RSTRIP
                 else:
                     yield line_no, token
             if comment == "//":
@@ -160,7 +162,10 @@ class Tokenizer(object):
         chunk = []
         whitespace_only = True
         for line_no, token in tokens:
-            if token is CHUNK_MARK:
+            if token is RSTRIP:
+                chunk = chunk[:-1]
+                continue
+            elif token is CHUNK_MARK:
                 if chunk:
                     yield chunk
                 chunk = []
