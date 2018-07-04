@@ -104,6 +104,7 @@ CHAR = re.compile(r"^'\w'$")
 CHUNK_MARK = object()
 RSTRIP = object()
 
+
 def _tokenize(s):
     for match in TOKEN.finditer(s):
         yield match.group(0)
@@ -125,7 +126,8 @@ class Token(object):
 
     def __repr__(self):
         return "Line {}, value {}".format(self.line_no, self.value)
-    
+
+
 class TokenExpander(object):
     def __init__(self, defines):
         self.defines = defines
@@ -172,7 +174,6 @@ class Tokenizer(object):
                 yield Token.from_string(line_no, self.line_ending)
                 if token != "\\":
                     yield Token.from_constant(line_no, CHUNK_MARK)
-
 
     def read_chunks(self):
         tokens = iter(self)
@@ -273,7 +274,7 @@ class Preprocessor(object):
                 pragma = getattr(self, method_name, None)
                 break
         if pragma is None:
-            raise Exception("Unsupported pragma %s on line %s" % (pragma_name,
+            raise Exception("Unsupported pragma %s on line %s" % (token.value,
                                                                   line_no))
         else:
             pragma(chunk=chunk, line_no=line_no)
