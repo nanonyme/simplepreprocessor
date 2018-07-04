@@ -109,20 +109,37 @@ def _tokenize(s):
         yield match.group(0)
 
 
+class Token(object):
+    def __init__(self, line_no, value, whitespace):
+        self.line_no = line_no
+        self.value = value
+        self.whitespace = whitespace
+
+    @classmethod
+    def from_string(cls, line_no, value):
+        return cls(line_no, value, not value.strip())
+
+    @classmethod
+    def from_constant(cls, line_no, value):
+        return cls(line_no, value, False)
+
+    def __repr__(self):
+        return "Line {}, value {}".format(self.line_no, self.value)
+    
 class TokenExpander(object):
     def __init__(self, defines):
         self.defines = defines
 
     def expand_tokens(self, tokens, seen=()):
-        for line_num, token in tokens:
-            if token not in self.defines or token in seen:
-                yield line_num, token
+        for token in tokens:
+            if token.value not in self.defines or token.value in seen:
+                yield token.value
             else:
-                new_seen = [token]
+                new_seen = [token.value]
                 new_seen.extend(seen)
                 if len(new_seen) > 20:
                     raise Exception("Stopping with stack %s" % new_seen)
-                tokens = [(line_num, token) for token in self.defines[token]]
+                tokens = self.defines[token.value]
                 for token in self.expand_tokens(tokens, new_seen):
                     yield token
 
@@ -145,37 +162,37 @@ class Tokenizer(object):
                     continue
                 elif token in ("//", "/*"):
                     comment = token
-                    yield line_no, RSTRIP
+                    yield Token.from_constant(line_no, RSTRIP)
                 else:
-                    yield line_no, token
+                    yield Token.from_string(line_no, token)
             if comment == "//":
                 if token != "\\":
                     comment = None
             if not comment:
-                yield line_no, self.line_ending
+                yield Token.from_string(line_no, self.line_ending)
                 if token != "\\":
-                    yield line_no, CHUNK_MARK
+                    yield Token.from_constant(line_no, CHUNK_MARK)
 
 
     def read_chunks(self):
         tokens = iter(self)
         chunk = []
         whitespace_only = True
-        for line_no, token in tokens:
-            if token is RSTRIP:
+        for token in tokens:
+            if token.value is RSTRIP:
                 chunk = chunk[:-1]
                 continue
-            elif token is CHUNK_MARK:
+            elif token.value is CHUNK_MARK:
                 if chunk:
                     yield chunk
                 chunk = []
                 whitespace_only = True
                 continue
-            chunk.append((line_no, token))
-            if token == "#":
+            chunk.append(token)
+            if token.value == "#":
                 if whitespace_only:
-                    chunk = [(line_no, "#")]
-            elif token.strip():
+                    chunk = [Token.from_string(token.line_no, "#")]
+            elif not token.whitespace:
                 whitespace_only = False
 
 
@@ -184,10 +201,10 @@ class Preprocessor(object):
     def __init__(self, line_ending=DEFAULT_LINE_ENDING, include_paths=(),
                  header_handler=None, platform_constants=PLATFORM_CONSTANTS,
                  ignore_headers=()):
-        self.defines = {}
         self.ignore_headers = ignore_headers
         self.include_once = {}
-        self.defines.update(platform_constants)
+        self.defines = {key: [Token.from_string(None, value)]
+                        for key, value in platform_constants.items()}
         self.constraints = []
         self.ignore = False
         self.line_ending = line_ending
@@ -205,26 +222,25 @@ class Preprocessor(object):
             return
         chunk = kwargs["chunk"]
         for i, tokenized in enumerate(chunk):
-            define_name = tokenized[1]
-            if define_name.strip():
-                rest = [e for i, e in chunk[i+2:-1]]
+            if not tokenized.whitespace:
+                define_name = tokenized.value
                 break
-        self.defines[define_name] = rest
+        self.defines[define_name] = chunk[i+2:-1]
 
     def process_endif(self, **kwargs):
-        line_num = kwargs["line_num"]
+        line_no = kwargs["line_no"]
         if not self.constraints:
-            raise ParseError("Unexpected #endif on line %s" % line_num)
+            raise ParseError("Unexpected #endif on line %s" % line_no)
         (constraint_type, constraint, ignore,
-         original_line_num) = self.constraints.pop()
+         original_line_no) = self.constraints.pop()
         if ignore:
             self.ignore = False
-        self.last_constraint = constraint, constraint_type, original_line_num
+        self.last_constraint = constraint, constraint_type, original_line_no
 
     def process_else(self, **kwargs):
-        line_num = kwargs["line_num"]
+        line_no = kwargs["line_no"]
         if not self.constraints:
-            raise ParseError("Unexpected #else on line %s" % line_num)
+            raise ParseError("Unexpected #else on line %s" % line_no)
         _, constraint, ignore, _ = self.constraints.pop()
         if self.ignore and ignore:
             ignore = False
@@ -232,34 +248,35 @@ class Preprocessor(object):
         elif not self.ignore and not ignore:
             ignore = True
             self.ignore = True
-        self.constraints.append((ELSE, constraint, ignore, line_num))
+        self.constraints.append((ELSE, constraint, ignore, line_no))
 
     def process_ifdef(self, **kwargs):
         chunk = kwargs["chunk"]
-        line_num = kwargs["line_num"]
-        for _, condition in chunk:
-            if condition.strip():
+        line_no = kwargs["line_no"]
+        for token in chunk:
+            if not token.whitespace:
+                condition = token.value
                 break
         if not self.ignore and condition not in self.defines:
             self.ignore = True
-            self.constraints.append((IFDEF, condition, True, line_num))
+            self.constraints.append((IFDEF, condition, True, line_no))
         else:
-            self.constraints.append((IFDEF, condition, False, line_num))
+            self.constraints.append((IFDEF, condition, False, line_no))
 
     def process_pragma(self, **kwargs):
         chunk = kwargs["chunk"]
-        line_num = kwargs["line_num"]
+        line_no = kwargs["line_no"]
         pragma = None
-        for _, pragma_name in chunk:
-            if pragma_name.strip():
-                method_name = "process_pragma_%s" % pragma_name
+        for token in chunk:
+            if not token.whitespace:
+                method_name = "process_pragma_%s" % token.value
                 pragma = getattr(self, method_name, None)
                 break
         if pragma is None:
             raise Exception("Unsupported pragma %s on line %s" % (pragma_name,
-                                                                  line_num))
+                                                                  line_no))
         else:
-            pragma(chunk=chunk, line_num=line_num)
+            pragma(chunk=chunk, line_no=line_no)
 
     def process_pragma_once(self, **_):
         self.include_once[self.current_name()] = PRAGMA_ONCE
@@ -269,20 +286,22 @@ class Preprocessor(object):
 
     def process_ifndef(self, **kwargs):
         chunk = kwargs["chunk"]
-        line_num = kwargs["line_num"]
-        for _, condition in chunk:
-            if condition.strip():
+        line_no = kwargs["line_no"]
+        for token in chunk:
+            if not token.whitespace:
+                condition = token.value
                 break
         if not self.ignore and condition in self.defines:
             self.ignore = True
-            self.constraints.append((IFNDEF, condition, True, line_num))
+            self.constraints.append((IFNDEF, condition, True, line_no))
         else:
-            self.constraints.append((IFNDEF, condition, False, line_num))
+            self.constraints.append((IFNDEF, condition, False, line_no))
 
     def process_undef(self, **kwargs):
         chunk = kwargs["chunk"]
-        for _, undefine in chunk:
-            if undefine.strip():
+        for token in chunk:
+            if not token.whitespace:
+                undefine = token.value
                 break
         try:
             del self.defines[undefine]
@@ -317,15 +336,16 @@ class Preprocessor(object):
             elif f is not SKIP_FILE:
                 with f:
                     for line in self.preprocess(f):
-                        yield None, line
+                        yield line
 
     def process_include(self, **kwargs):
         chunk = kwargs["chunk"]
-        line_num = kwargs["line_num"]
-        for _, item in chunk:
-            if item.strip():
+        line_no = kwargs["line_no"]
+        for token in chunk:
+            if not token.whitespace:
+                item = token.value
                 break
-        s = "Line %s includes a file %s that can't be found" % (line_num,
+        s = "Line %s includes a file %s that can't be found" % (line_no,
                                                                 item)
         error = ParseError(s)
         if item.startswith("<") and item.endswith(">"):
@@ -336,7 +356,7 @@ class Preprocessor(object):
             return self._read_header(header, error, self.current_name())
         else:
             fmt = "Invalid include on line %s, got %r for include name"
-            raise ParseError(fmt % (line_num, item))
+            raise ParseError(fmt % (line_no, item))
 
     def check_fullfile_guard(self):
         if self.last_constraint is None:
@@ -351,32 +371,32 @@ class Preprocessor(object):
         tokenizer = Tokenizer(f_object, self.line_ending)
         for chunk in tokenizer.read_chunks():
             self.last_constraint = None
-            if chunk[0][1] == "#":
-                line_num = chunk[0][0]
-                macro_name = chunk[1][1]
+            if chunk[0].value == "#":
+                line_no = chunk[0].line_no
+                macro_name = chunk[1].value
                 macro_chunk = chunk[2:]
                 macro = getattr(self, "process_%s" % macro_name, None)
                 if macro is None:
                     fmt = "Line number %s contains unsupported macro %s"
-                    raise ParseError(fmt % (line_num, macro_name))
-                ret = macro(line_num=line_num, chunk=macro_chunk)
+                    raise ParseError(fmt % (line_no, macro_name))
+                ret = macro(line_no=line_no, chunk=macro_chunk)
                 if ret is not None:
-                    for _, token in ret:
+                    for token in ret:
                         yield token
             else:
-                for _, token in self.process_source_chunks(chunk):
+                for token in self.process_source_chunks(chunk):
                     yield token
         self.check_fullfile_guard()
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
-            constraint_type, name, _, line_num = self.constraints[-1]
+            constraint_type, name, _, line_no = self.constraints[-1]
             if constraint_type is IFDEF:
                 fmt = "#ifdef %s from line %s left open"
             elif constraint_type is IFNDEF:
                 fmt = "#ifndef %s from line %s left open"
             else:
                 fmt = "#else from line %s left open"
-            raise ParseError(fmt % (name, line_num))
+            raise ParseError(fmt % (name, line_no))
 
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
