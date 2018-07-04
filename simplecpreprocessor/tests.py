@@ -94,7 +94,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         lines = [" /* \n",
                  " 'foo */\n"]
         f_obj = FakeFile("header.h", lines)
-        self.run_case(f_obj, " \n")
+        self.run_case(f_obj, "\n")
 
     def test_string_token_with_single_quote(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
@@ -336,7 +336,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         f_obj = FakeFile("header.h", [
             "#define FOO 1 // comment\n",
             "FOO\n"])
-        expected = "1 \n"
+        expected = "1\n"
         self.run_case(f_obj, expected)
 
     def test_ifdef_with_comment(self):
