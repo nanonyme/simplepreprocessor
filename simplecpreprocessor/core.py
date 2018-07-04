@@ -336,8 +336,8 @@ class Preprocessor(object):
                 raise error
             elif f is not SKIP_FILE:
                 with f:
-                    for line in self.preprocess(f):
-                        yield line
+                    for chunk in self.preprocess(f):
+                        yield chunk
 
     def process_include(self, **kwargs):
         chunk = kwargs["chunk"]
@@ -404,7 +404,8 @@ def preprocess(f_object, line_ending="\n", include_paths=(),
                header_handler=None, platform_constants=PLATFORM_CONSTANTS,
                ignore_headers=()):
     r"""
-    This preprocessor yields lines with \n at the end
+    This preprocessor yields chunks of text that combined results in lines
+    delimited with given line ending. There is always a final line ending.
     """
     preprocessor = Preprocessor(line_ending, include_paths, header_handler,
                                 platform_constants, ignore_headers)
