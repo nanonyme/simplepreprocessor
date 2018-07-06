@@ -181,7 +181,7 @@ class Tokenizer(object):
                     else:
                         if token.whitespace:
                             if (lookahead.whitespace and
-                                    lookahead.value != "\n"):
+                                    lookahead.value != self.line_ending):
                                 token.value += lookahead.value
                                 continue           
                             elif lookahead.value in COMMENT_START:
