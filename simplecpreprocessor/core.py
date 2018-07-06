@@ -97,24 +97,31 @@ IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
 TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|\".+\"|'\w'|/\*|"
-                    r"\*/|//|\b\w+\b|\s+|\W"))
+                    r"\*/|//|\b\w+\b|\r\n|\n|[ \t]+|\W"))
 DOUBLE_QUOTE = '"'
 SINGLE_QUOTE = "'"
 CHAR = re.compile(r"^'\w'$")
 CHUNK_MARK = object()
 RSTRIP = object()
+COMMENT_START = ("/*", "//")
+LINE_ENDINGS = ("\r\n", "\n")
 
 
-def _tokenize(s):
-    for match in TOKEN.finditer(s):
-        yield match.group(0)
+def _tokenize(line_no, line, line_ending):
+    for match in TOKEN.finditer(line):
+        s = match.group(0)
+        if s in LINE_ENDINGS:
+            s = line_ending
+        yield Token.from_string(line_no, s)
 
 
 class Token(object):
+    __slots__ = ["line_no", "value", "whitespace", "chunk_mark"]
     def __init__(self, line_no, value, whitespace):
         self.line_no = line_no
         self.value = value
         self.whitespace = whitespace
+        self.chunk_mark = False
 
     @classmethod
     def from_string(cls, line_no, value):
@@ -125,7 +132,7 @@ class Token(object):
         return cls(line_no, value, False)
 
     def __repr__(self):
-        return "Line {}, value {}".format(self.line_no, self.value)
+        return "Line {}, value {!r}".format(self.line_no, self.value)
 
 
 class TokenExpander(object):
@@ -147,54 +154,60 @@ class TokenExpander(object):
 
 
 class Tokenizer(object):
+    NO_COMMENT = Token.from_constant(None, None)
+
     def __init__(self, f_obj, line_ending):
         self.source = enumerate(f_obj)
         self.line_ending = line_ending
 
     def __iter__(self):
-        comment = None
+        comment = self.NO_COMMENT
         for line_no, line in self.source:
-            line = line.rstrip("\r\n")
-            tokens = _tokenize(line)
-            token = None
-            for token in tokens:
-                if token == "*/" and comment == "/*":
-                    comment = None
-                elif comment:
-                    continue
-                elif token in ("//", "/*"):
-                    comment = token
-                    yield Token.from_constant(line_no, RSTRIP)
+            tokens = _tokenize(line_no, line, self.line_ending)
+            token = next(tokens, None)
+            if token is None:
+                continue
+            for lookahead in tokens:
+                if (token.value != "\\" and
+                      lookahead.value == self.line_ending):
+                    lookahead.chunk_mark = True
+                if token.value == "*/" and comment.value == "/*":
+                    comment = self.NO_COMMENT
+                elif comment is not self.NO_COMMENT:
+                    pass
                 else:
-                    yield Token.from_string(line_no, token)
-            if comment == "//":
-                if token != "\\":
-                    comment = None
-            if not comment:
-                yield Token.from_string(line_no, self.line_ending)
-                if token != "\\":
-                    yield Token.from_constant(line_no, CHUNK_MARK)
+                    if token.value in COMMENT_START:
+                        comment = token
+                    else:
+                        if token.whitespace:
+                            if (lookahead.whitespace and
+                                    lookahead.value != "\n"):
+                                token.value += lookahead.value
+                                continue           
+                            elif lookahead.value in COMMENT_START:
+                                pass
+                            elif lookahead.value == "#":
+                                pass
+                            else:
+                                yield token
+                        else:
+                            yield token
+
+                token = lookahead
+            if comment.value == "//" and token.value != "\\":
+                comment = self.NO_COMMENT
+            if comment is self.NO_COMMENT:
+                yield token
 
     def read_chunks(self):
-        tokens = iter(self)
         chunk = []
-        whitespace_only = True
-        for token in tokens:
-            if token.value is RSTRIP:
-                chunk = chunk[:-1]
-                continue
-            elif token.value is CHUNK_MARK:
+        for token in self:
+            chunk.append(token)            
+            if token.chunk_mark:
                 if chunk:
                     yield chunk
                 chunk = []
-                whitespace_only = True
                 continue
-            chunk.append(token)
-            if token.value == "#":
-                if whitespace_only:
-                    chunk = [Token.from_string(token.line_no, "#")]
-            elif not token.whitespace:
-                whitespace_only = False
 
 
 class Preprocessor(object):
