@@ -69,7 +69,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def test_define(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
-                                      "FOO"])
+                                      "FOO\n"])
         expected = "1\n"
         self.run_case(f_obj, expected)
 
@@ -98,7 +98,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def test_string_token_with_single_quote(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
-                                      '"FOO\'"'])
+                                      '"FOO\'"\n'])
         expected = '"FOO\'"\n'
         self.run_case(f_obj, expected)
 
@@ -158,7 +158,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
     def test_define_undefine(self):
         f_obj = FakeFile("header.h", ["#define FOO 1\n",
                                       "#undef FOO\n",
-                                      "FOO"])
+                                      "FOO\n"])
         expected = "FOO\n"
         self.run_case(f_obj, expected)
 
@@ -344,7 +344,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             "#define FOO\n",
             "#ifdef FOO // comment\n",
             "1\n",
-            "#endif"])
+            "#endif\n"])
         expected = "1\n"
         self.run_case(f_obj, expected)
 
@@ -510,7 +510,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def test_platform_constants(self):
         f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',
-                                      'ODDPLATFORM\n', '#endif'])
+                                      'ODDPLATFORM\n', '#endif\n'])
         const = {"ODDPLATFORM": "ODDPLATFORM"}
         ret = simplecpreprocessor.preprocess(f_obj,
                                              platform_constants=const)
