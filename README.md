@@ -19,13 +19,13 @@ Travis
 Gotchas
 ---------
 
-Supported macros: ifdef, ifndef, define, undef, include, else
+Supported macros: ifdef, ifndef, define, undef, include, else,
+pragma (only "once")
 
 If using for FFI, you may want to ignore some system headers eg for types
 
 Limitations:
- * multiline defines supported but whitespace handling may not be 1:1 with
-   real preprocessors. trailing whitespace is removed, indentation from first
-   line is removed
- * no magic with the semicolon. if you want a semicolon in the result, write
-   it in your macro
+ * Multiline continuations supported but whitespace handling may not be 1:1
+   with real preprocessors. Trailing whitespace is removed if before comment,
+   indentation from first line is removed
+ * Semi-colon handling may not be identical to real preprocessors
