@@ -96,7 +96,7 @@ IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
 SKIP_FILE = object()
-TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|\".+\"|'\w'|/\*|"
+TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|L?\".+\"|'\w'|/\*|"
                     r"\*/|//|\b\w+\b|\r\n|\n|[ \t]+|\W"))
 DOUBLE_QUOTE = '"'
 SINGLE_QUOTE = "'"

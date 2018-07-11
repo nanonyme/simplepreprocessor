@@ -102,6 +102,12 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         expected = '"FOO\'"\n'
         self.run_case(f_obj, expected)
 
+    def test_wchar_string(self):
+        f_obj = FakeFile("header.h", ["#define L 1\n",
+            'L"FOO"\n'])
+        expected = 'L"FOO"\n'
+        self.run_case(f_obj, expected)
+
     def test_multiline_define(self):
         f_obj = FakeFile("header.h", ["#define FOO \\\n",
                                       "\t1\n",
