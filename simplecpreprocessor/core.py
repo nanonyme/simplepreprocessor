@@ -1,52 +1,10 @@
-import logging
 import platform
 import re
-import posixpath
-
-logger = logging.getLogger(__name__)
+from simplecpreprocessor import filesystem
 
 
 class ParseError(Exception):
     pass
-
-
-class HeaderHandler(object):
-
-    def __init__(self, include_paths):
-        self.include_paths = list(include_paths)
-        self.resolved = {}
-
-    def _open(self, header_path):
-        try:
-            f = open(header_path)
-        except IOError:
-            return None
-        else:
-            return f
-
-    def add_include_paths(self, include_paths):
-        self.include_paths.extend(include_paths)
-
-    def _resolve(self, anchor_file):
-        if anchor_file is not None:
-            yield posixpath.dirname(anchor_file)
-        for include_path in self.include_paths:
-            yield include_path
-
-    def open_header(self, include_header, skip_file, anchor_file):
-        header_path = self.resolved.get(include_header)
-        if header_path is not None:
-            if skip_file(header_path):
-                return SKIP_FILE
-            else:
-                return self._open(header_path)
-        for include_path in self._resolve(anchor_file):
-            header_path = posixpath.join(include_path, include_header)
-            f = self._open(posixpath.normpath(header_path))
-            if f:
-                self.resolved[include_header] = f.name
-                break
-        return f
 
 
 def calculate_windows_constants(bitness=None):
@@ -95,7 +53,6 @@ PRAGMA_ONCE = "pragma_once"
 IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
-SKIP_FILE = object()
 TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|L?\".+\"|'\w'|/\*|"
                     r"\*/|//|\b\w+\b|\r\n|\n|[ \t]+|\W"))
 DOUBLE_QUOTE = '"'
@@ -117,6 +74,7 @@ def _tokenize(line_no, line, line_ending):
 
 class Token(object):
     __slots__ = ["line_no", "value", "whitespace", "chunk_mark"]
+
     def __init__(self, line_no, value, whitespace):
         self.line_no = line_no
         self.value = value
@@ -169,7 +127,7 @@ class Tokenizer(object):
                 continue
             for lookahead in tokens:
                 if (token.value != "\\" and
-                      lookahead.value == self.line_ending):
+                        lookahead.value == self.line_ending):
                     lookahead.chunk_mark = True
                 if token.value == "*/" and comment.value == "/*":
                     comment = self.NO_COMMENT
@@ -183,7 +141,7 @@ class Tokenizer(object):
                             if (lookahead.whitespace and
                                     lookahead.value != self.line_ending):
                                 token.value += lookahead.value
-                                continue           
+                                continue
                             elif lookahead.value in COMMENT_START:
                                 pass
                             elif lookahead.value == "#":
@@ -202,7 +160,7 @@ class Tokenizer(object):
     def read_chunks(self):
         chunk = []
         for token in self:
-            chunk.append(token)            
+            chunk.append(token)
             if token.chunk_mark:
                 if chunk:
                     yield chunk
@@ -226,7 +184,7 @@ class Preprocessor(object):
         self.header_stack = []
         self.token_expander = TokenExpander(self.defines)
         if header_handler is None:
-            self.headers = HeaderHandler(include_paths)
+            self.headers = filesystem.HeaderHandler(include_paths)
         else:
             self.headers = header_handler
             self.headers.add_include_paths(include_paths)
@@ -347,7 +305,7 @@ class Preprocessor(object):
             f = self.headers.open_header(header, self.skip_file, anchor_file)
             if f is None:
                 raise error
-            elif f is not SKIP_FILE:
+            elif f is not filesystem.SKIP_FILE:
                 with f:
                     for chunk in self.preprocess(f):
                         yield chunk
