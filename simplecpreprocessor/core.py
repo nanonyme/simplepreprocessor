@@ -1,232 +1,30 @@
-import logging
-import platform
-import re
-import posixpath
+from simplecpreprocessor import filesystem, tokens, platform
+from simplecpreprocessor.exceptions import ParseError
 
-logger = logging.getLogger(__name__)
-
-
-class ParseError(Exception):
-    pass
-
-
-class HeaderHandler(object):
-
-    def __init__(self, include_paths):
-        self.include_paths = list(include_paths)
-        self.resolved = {}
-
-    def _open(self, header_path):
-        try:
-            f = open(header_path)
-        except IOError:
-            return None
-        else:
-            return f
-
-    def add_include_paths(self, include_paths):
-        self.include_paths.extend(include_paths)
-
-    def _resolve(self, anchor_file):
-        if anchor_file is not None:
-            yield posixpath.dirname(anchor_file)
-        for include_path in self.include_paths:
-            yield include_path
-
-    def open_header(self, include_header, skip_file, anchor_file):
-        header_path = self.resolved.get(include_header)
-        if header_path is not None:
-            if skip_file(header_path):
-                return SKIP_FILE
-            else:
-                return self._open(header_path)
-        for include_path in self._resolve(anchor_file):
-            header_path = posixpath.join(include_path, include_header)
-            f = self._open(posixpath.normpath(header_path))
-            if f:
-                self.resolved[include_header] = f.name
-                break
-        return f
-
-
-def calculate_windows_constants(bitness=None):
-    if bitness is None:
-        bitness, _ = platform.architecture()
-    constants = {
-        "WIN32": "WIN32", "_WIN64": "_WIN64"}
-    if bitness == "64bit":
-        constants["WIN64"] = "WIN64"
-        constants["_WIN64"] = "_WIN64"
-    elif not bitness == "32bit":
-        raise Exception("Unsupported bitness %s" % bitness)
-    return constants
-
-
-def calculate_linux_constants(bitness=None):
-    if bitness is None:
-        bitness, _ = platform.architecture()
-    constants = {
-        "__linux__": "__linux__"
-    }
-    if bitness == "32bit":
-        constants["__i386__"] = "__i386__"
-    elif bitness == "64bit":
-        constants["__x86_64__"] = "__x86_64"
-    else:
-        raise Exception("Unsupported bitness %s" % bitness)
-    return constants
-
-
-def calculate_platform_constants():
-    system = platform.system()
-    if system == "Windows":
-        constants = calculate_windows_constants()
-    elif system == "Linux":
-        constants = calculate_linux_constants()
-    else:
-        raise ParseError("Unsupported platform %s" % platform)
-    constants["__SIZE_TYPE__"] = "size_t"
-    return constants
-
-
-PLATFORM_CONSTANTS = calculate_platform_constants()
-DEFAULT_LINE_ENDING = "\n"
 PRAGMA_ONCE = "pragma_once"
 IFDEF = "ifdef"
 IFNDEF = "ifndef"
 ELSE = "else"
-SKIP_FILE = object()
-TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|L?\".+\"|'\w'|/\*|"
-                    r"\*/|//|\b\w+\b|\r\n|\n|[ \t]+|\W"))
-DOUBLE_QUOTE = '"'
-SINGLE_QUOTE = "'"
-CHAR = re.compile(r"^'\w'$")
-CHUNK_MARK = object()
-RSTRIP = object()
-COMMENT_START = ("/*", "//")
-LINE_ENDINGS = ("\r\n", "\n")
-
-
-def _tokenize(line_no, line, line_ending):
-    for match in TOKEN.finditer(line):
-        s = match.group(0)
-        if s in LINE_ENDINGS:
-            s = line_ending
-        yield Token.from_string(line_no, s)
-
-
-class Token(object):
-    __slots__ = ["line_no", "value", "whitespace", "chunk_mark"]
-    def __init__(self, line_no, value, whitespace):
-        self.line_no = line_no
-        self.value = value
-        self.whitespace = whitespace
-        self.chunk_mark = False
-
-    @classmethod
-    def from_string(cls, line_no, value):
-        return cls(line_no, value, not value.strip())
-
-    @classmethod
-    def from_constant(cls, line_no, value):
-        return cls(line_no, value, False)
-
-    def __repr__(self):
-        return "Line {}, value {!r}".format(self.line_no, self.value)
-
-
-class TokenExpander(object):
-    def __init__(self, defines):
-        self.defines = defines
-
-    def expand_tokens(self, tokens, seen=()):
-        for token in tokens:
-            if token.value not in self.defines or token.value in seen:
-                yield token.value
-            else:
-                new_seen = [token.value]
-                new_seen.extend(seen)
-                if len(new_seen) > 20:
-                    raise Exception("Stopping with stack %s" % new_seen)
-                tokens = self.defines[token.value]
-                for token in self.expand_tokens(tokens, new_seen):
-                    yield token
-
-
-class Tokenizer(object):
-    NO_COMMENT = Token.from_constant(None, None)
-
-    def __init__(self, f_obj, line_ending):
-        self.source = enumerate(f_obj)
-        self.line_ending = line_ending
-
-    def __iter__(self):
-        comment = self.NO_COMMENT
-        for line_no, line in self.source:
-            tokens = _tokenize(line_no, line, self.line_ending)
-            token = next(tokens, None)
-            if token is None:
-                continue
-            for lookahead in tokens:
-                if (token.value != "\\" and
-                      lookahead.value == self.line_ending):
-                    lookahead.chunk_mark = True
-                if token.value == "*/" and comment.value == "/*":
-                    comment = self.NO_COMMENT
-                elif comment is not self.NO_COMMENT:
-                    pass
-                else:
-                    if token.value in COMMENT_START:
-                        comment = token
-                    else:
-                        if token.whitespace:
-                            if (lookahead.whitespace and
-                                    lookahead.value != self.line_ending):
-                                token.value += lookahead.value
-                                continue           
-                            elif lookahead.value in COMMENT_START:
-                                pass
-                            elif lookahead.value == "#":
-                                pass
-                            else:
-                                yield token
-                        else:
-                            yield token
-
-                token = lookahead
-            if comment.value == "//" and token.value != "\\":
-                comment = self.NO_COMMENT
-            if comment is self.NO_COMMENT:
-                yield token
-
-    def read_chunks(self):
-        chunk = []
-        for token in self:
-            chunk.append(token)            
-            if token.chunk_mark:
-                if chunk:
-                    yield chunk
-                chunk = []
-                continue
 
 
 class Preprocessor(object):
 
-    def __init__(self, line_ending=DEFAULT_LINE_ENDING, include_paths=(),
-                 header_handler=None, platform_constants=PLATFORM_CONSTANTS,
+    def __init__(self, line_ending=tokens.DEFAULT_LINE_ENDING,
+                 include_paths=(), header_handler=None,
+                 platform_constants=platform.PLATFORM_CONSTANTS,
                  ignore_headers=()):
         self.ignore_headers = ignore_headers
         self.include_once = {}
-        self.defines = {key: [Token.from_string(None, value)]
+        self.defines = {key: [tokens.Token.from_string(None, value)]
                         for key, value in platform_constants.items()}
         self.constraints = []
         self.ignore = False
         self.line_ending = line_ending
         self.last_constraint = None
         self.header_stack = []
-        self.token_expander = TokenExpander(self.defines)
+        self.token_expander = tokens.TokenExpander(self.defines)
         if header_handler is None:
-            self.headers = HeaderHandler(include_paths)
+            self.headers = filesystem.HeaderHandler(include_paths)
         else:
             self.headers = header_handler
             self.headers.add_include_paths(include_paths)
@@ -347,7 +145,7 @@ class Preprocessor(object):
             f = self.headers.open_header(header, self.skip_file, anchor_file)
             if f is None:
                 raise error
-            elif f is not SKIP_FILE:
+            elif f is not filesystem.SKIP_FILE:
                 with f:
                     for chunk in self.preprocess(f):
                         yield chunk
@@ -382,7 +180,7 @@ class Preprocessor(object):
 
     def preprocess(self, f_object, depth=0):
         self.header_stack.append(f_object)
-        tokenizer = Tokenizer(f_object, self.line_ending)
+        tokenizer = tokens.Tokenizer(f_object, self.line_ending)
         for chunk in tokenizer.read_chunks():
             self.last_constraint = None
             if chunk[0].value == "#":
@@ -414,7 +212,8 @@ class Preprocessor(object):
 
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
-               header_handler=None, platform_constants=PLATFORM_CONSTANTS,
+               header_handler=None,
+               platform_constants=platform.PLATFORM_CONSTANTS,
                ignore_headers=()):
     r"""
     This preprocessor yields chunks of text that combined results in lines

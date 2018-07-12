@@ -1,44 +1,12 @@
 from __future__ import absolute_import
 import unittest
-import simplecpreprocessor.core as simplecpreprocessor
+from simplecpreprocessor import preprocess
+from simplecpreprocessor.core import Preprocessor, ParseError
+from simplecpreprocessor.filesystem import FakeFile, FakeHandler
 import posixpath
 import os
 import cProfile
 from pstats import Stats
-
-
-class FakeFile(object):
-
-    def __init__(self, name, contents):
-        self.name = name
-        self.contents = contents
-
-    def __iter__(self):
-        for line in self.contents:
-            yield line
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
-
-
-class FakeHandler(simplecpreprocessor.HeaderHandler):
-
-    def __init__(self, header_mapping, include_paths=()):
-        self.header_mapping = header_mapping
-        super(FakeHandler, self).__init__(list(include_paths))
-
-    def _open(self, header_path):
-        contents = self.header_mapping.get(header_path)
-        if contents is not None:
-            return FakeFile(header_path, contents)
-        else:
-            return None
-
-    def parent_open(self, header_path):
-        return super(FakeHandler, self)._open(header_path)
 
 
 class ProfilerMixin(object):
@@ -63,7 +31,7 @@ class ProfilerMixin(object):
 class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def run_case(self, input_list, expected):
-        ret = simplecpreprocessor.preprocess(input_list)
+        ret = preprocess(input_list)
         output = "".join(ret)
         self.assertEqual(output, expected)
 
@@ -104,7 +72,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def test_wchar_string(self):
         f_obj = FakeFile("header.h", ["#define L 1\n",
-            'L"FOO"\n'])
+                         'L"FOO"\n'])
         expected = 'L"FOO"\n'
         self.run_case(f_obj, expected)
 
@@ -186,23 +154,23 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
 
     def test_extra_endif_causes_error(self):
         input_list = ["#endif\n"]
-        with self.assertRaises(simplecpreprocessor.ParseError):
-            list(simplecpreprocessor.preprocess(input_list))
+        with self.assertRaises(ParseError):
+            list(preprocess(input_list))
 
     def test_ifdef_left_open_causes_error(self):
         f_obj = FakeFile("header.h", ["#ifdef FOO\n"])
-        with self.assertRaises(simplecpreprocessor.ParseError):
-            list(simplecpreprocessor.preprocess(f_obj))
+        with self.assertRaises(ParseError):
+            list(preprocess(f_obj))
 
     def test_ifndef_left_open_causes_error(self):
         f_obj = FakeFile("header.h", ["#ifndef FOO\n"])
-        with self.assertRaises(simplecpreprocessor.ParseError):
-            list(simplecpreprocessor.preprocess(f_obj))
+        with self.assertRaises(ParseError):
+            list(preprocess(f_obj))
 
     def test_unexpected_macro_gives_parse_error(self):
         f_obj = FakeFile("header.h", ["#something_unsupported foo bar\n"])
-        with self.assertRaises(simplecpreprocessor.ParseError):
-            list(simplecpreprocessor.preprocess(f_obj))
+        with self.assertRaises(ParseError):
+            list(preprocess(f_obj))
 
     def test_ifndef_unfulfilled_define_ignored(self):
         f_obj = FakeFile("header.h", ["#define FOO\n", "#ifndef FOO\n",
@@ -296,16 +264,14 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
     def test_lines_normalize_custom(self):
         f_obj = FakeFile("header.h", ["foo\n", "bar\n"])
         expected = "foo\r\nbar\r\n"
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             line_ending="\r\n")
+        ret = preprocess(f_obj, line_ending="\r\n")
         self.assertEqual("".join(ret), expected)
 
     def test_include_local_file_with_subdirectory(self):
         other_header = "somedirectory/other.h"
         f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
         handler = FakeHandler({other_header: ["1\n"]})
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             header_handler=handler)
+        ret = preprocess(f_obj, header_handler=handler)
         self.assertEqual("".join(ret), "1\n")
 
     def test_include_local_precedence(self):
@@ -315,8 +281,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         handler = FakeHandler({other_header: ["1\n"],
                                "%s/%s" % (path, other_header): ["2\n"]},
                               include_paths=[path])
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             header_handler=handler)
+        ret = preprocess(f_obj, header_handler=handler)
         self.assertEqual("".join(ret), "1\n")
 
     def test_include_local_fallback(self):
@@ -325,8 +290,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
         handler = FakeHandler({"%s/%s" % (path, other_header): ["2\n"]},
                               include_paths=[path])
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             header_handler=handler)
+        ret = preprocess(f_obj, header_handler=handler)
         self.assertEqual("".join(ret), "2\n")
 
     def test_ifdef_file_guard(self):
@@ -334,8 +298,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         f_obj = FakeFile("header.h",
                          ['#include "%s"\n' % other_header])
         handler = FakeHandler({other_header: ["1\n"]})
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             header_handler=handler)
+        ret = preprocess(f_obj, header_handler=handler)
         self.assertEqual("".join(ret), "1\n")
 
     def test_define_with_comment(self):
@@ -359,9 +322,8 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         handler = FakeHandler({posixpath.join("subdirectory",
                                               "other.h"): ["1\n"]})
         include_paths = ["subdirectory"]
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             include_paths=include_paths,
-                                             header_handler=handler)
+        ret = preprocess(f_obj, include_paths=include_paths,
+                         header_handler=handler)
         self.assertEqual("".join(ret), "1\n")
 
     def test_tab_macro_indentation(self):
@@ -385,18 +347,16 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         handler = FakeHandler({posixpath.join(include_path,
                                               header_file): ["1\n"]})
         include_paths = [include_path]
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             include_paths=include_paths,
-                                             header_handler=handler)
+        ret = preprocess(f_obj, include_paths=include_paths,
+                         header_handler=handler)
         self.assertEqual("".join(ret), "1\n")
 
     def test_include_missing_local_file(self):
         other_header = posixpath.join("somedirectory", "other.h")
         f_obj = FakeFile("header.h", ['#include "%s"\n' % other_header])
         handler = FakeHandler({})
-        with self.assertRaises(simplecpreprocessor.ParseError):
-            ret = simplecpreprocessor.preprocess(f_obj,
-                                                 header_handler=handler)
+        with self.assertRaises(ParseError):
+            ret = preprocess(f_obj, header_handler=handler)
             "".join(ret)
 
     def test_ignore_include_path(self):
@@ -405,10 +365,9 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
                                               "other.h"): ["1\n"]})
         paths = ["subdirectory"]
         ignored = ["other.h"]
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             include_paths=paths,
-                                             header_handler=handler,
-                                             ignore_headers=ignored)
+        ret = preprocess(f_obj, include_paths=paths,
+                         header_handler=handler,
+                         ignore_headers=ignored)
         self.assertEqual("".join(ret), "")
 
     def test_pragma_once(self):
@@ -422,7 +381,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             "#else\n",
             "#define X 1\n",
             "#endif\n"]})
-        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        preprocessor = Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual("".join(ret), "1\n")
         self.assertTrue(preprocessor.skip_file("other.h"))
@@ -433,7 +392,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         handler = FakeHandler({"other.h": [
             "#ifdef X\n",
             "#endif\n"]})
-        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        preprocessor = Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual("".join(ret), "1\n")
         self.assertTrue(preprocessor.skip_file("other.h"),
@@ -447,7 +406,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         handler = FakeHandler({"other.h": [
             "#ifdef X\n",
             "#endif\n"]})
-        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        preprocessor = Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual("".join(ret), "1\n")
         self.assertFalse(preprocessor.skip_file("other.h"),
@@ -461,7 +420,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         handler = FakeHandler({"other.h": [
             "#ifndef X\n",
             "#endif\n"]})
-        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        preprocessor = Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual("".join(ret), "done\n")
         self.assertTrue(preprocessor.skip_file("other.h"),
@@ -474,7 +433,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         handler = FakeHandler({"other.h": [
             "#ifndef X\n",
             "#endif\n"]})
-        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        preprocessor = Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual("".join(ret), "done\n")
         self.assertFalse(preprocessor.skip_file("other.h"),
@@ -490,7 +449,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             "#undef X\n",
             "#endif\n",
             "foo\n"]})
-        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        preprocessor = Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual("".join(ret), "foo\ndone\n")
         self.assertEqual({}, preprocessor.include_once)
@@ -506,7 +465,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             "#define X\n",
             "#endif\n",
             "foo\n"]})
-        preprocessor = simplecpreprocessor.Preprocessor(header_handler=handler)
+        preprocessor = Preprocessor(header_handler=handler)
         ret = preprocessor.preprocess(f_obj)
         self.assertEqual("".join(ret), "foo\ndone\n")
         self.assertEqual({}, preprocessor.include_once)
@@ -518,8 +477,7 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
         f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',
                                       'ODDPLATFORM\n', '#endif\n'])
         const = {"ODDPLATFORM": "ODDPLATFORM"}
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             platform_constants=const)
+        ret = preprocess(f_obj, platform_constants=const)
         self.assertEqual("".join(ret), "ODDPLATFORM\n")
 
     def test_handler_missing_file(self):
@@ -537,6 +495,5 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
     def test_repeated_macro(self):
         f_obj = FakeFile("header.h", ['A A\n', ])
         const = {"A": "value"}
-        ret = simplecpreprocessor.preprocess(f_obj,
-                                             platform_constants=const)
+        ret = preprocess(f_obj, platform_constants=const)
         self.assertEqual("".join(ret), "value value\n")
