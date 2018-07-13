@@ -6,16 +6,47 @@ IFNDEF = "ifndef"
 ELSE = "else"
 
 
+def constants_to_token_constants(constants):
+    return {key: [tokens.Token.from_string(None, value)]
+            for key, value in constants.items()}
+
+
+TOKEN_CONSTANTS = constants_to_token_constants(platform.PLATFORM_CONSTANTS)
+
+
+class Defines(object):
+    def __init__(self, base):
+        self.base = base
+        self.overrides = {}
+
+    def get(self, key, default=None):
+        candidate = self.overrides.get(key, None)
+        if candidate is not None:
+            return candidate
+        candidate = self.base.get(key, None)
+        if candidate is not None:
+            return candidate
+        return default
+
+    def __delitem__(self, key):
+        del self.overrides[key]
+
+    def __setitem__(self, key, value):
+        self.overrides[key] = value
+
+    def __contains__(self, key):
+        return key in self.overrides or key in self.base
+
+
 class Preprocessor(object):
 
     def __init__(self, line_ending=tokens.DEFAULT_LINE_ENDING,
                  include_paths=(), header_handler=None,
-                 platform_constants=platform.PLATFORM_CONSTANTS,
+                 platform_constants=TOKEN_CONSTANTS,
                  ignore_headers=()):
         self.ignore_headers = ignore_headers
         self.include_once = {}
-        self.defines = {key: [tokens.Token.from_string(None, value)]
-                        for key, value in platform_constants.items()}
+        self.defines = Defines(platform_constants)
         self.constraints = []
         self.ignore = False
         self.line_ending = line_ending
@@ -41,7 +72,8 @@ class Preprocessor(object):
     def process_endif(self, **kwargs):
         line_no = kwargs["line_no"]
         if not self.constraints:
-            raise exceptions.ParseError("Unexpected #endif on line %s" % line_no)
+            fmt = "Unexpected #endif on line %s"
+            raise exceptions.ParseError(fmt % line_no)
         (constraint_type, constraint, ignore,
          original_line_no) = self.constraints.pop()
         if ignore:
@@ -51,7 +83,8 @@ class Preprocessor(object):
     def process_else(self, **kwargs):
         line_no = kwargs["line_no"]
         if not self.constraints:
-            raise exceptions.ParseError("Unexpected #else on line %s" % line_no)
+            fmt = "Unexpected #else on line %s"
+            raise exceptions.ParseError(fmt % line_no)
         _, constraint, ignore, _ = self.constraints.pop()
         if self.ignore and ignore:
             ignore = False
@@ -121,8 +154,8 @@ class Preprocessor(object):
 
     def process_source_chunks(self, chunk):
         if not self.ignore:
-            for chunk in self.token_expander.expand_tokens(chunk):
-                yield chunk
+            for token in self.token_expander.expand_tokens(chunk):
+                yield token.value
 
     def skip_file(self, name):
         item = self.include_once.get(name)
@@ -212,7 +245,7 @@ class Preprocessor(object):
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
                header_handler=None,
-               platform_constants=platform.PLATFORM_CONSTANTS,
+               platform_constants=TOKEN_CONSTANTS,
                ignore_headers=()):
     r"""
     This preprocessor yields chunks of text that combined results in lines

@@ -44,19 +44,21 @@ class Token(object):
 class TokenExpander(object):
     def __init__(self, defines):
         self.defines = defines
+        self.seen = set()
 
-    def expand_tokens(self, tokens, seen=()):
+    def expand_tokens(self, tokens):
         for token in tokens:
-            if token.value not in self.defines or token.value in seen:
-                yield token.value
+            if token.value in self.seen:
+                yield token
             else:
-                new_seen = [token.value]
-                new_seen.extend(seen)
-                if len(new_seen) > 20:
-                    raise Exception("Stopping with stack %s" % new_seen)
-                tokens = self.defines[token.value]
-                for token in self.expand_tokens(tokens, new_seen):
+                resolved = self.defines.get(token.value, token)
+                if resolved is token:
                     yield token
+                else:
+                    self.seen.add(token.value)
+                    for resolved in self.expand_tokens(resolved):
+                        yield resolved
+                    self.seen.remove(token.value)
 
 
 class Tokenizer(object):
