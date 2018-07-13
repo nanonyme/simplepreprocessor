@@ -3,6 +3,7 @@ import unittest
 from simplecpreprocessor import preprocess
 from simplecpreprocessor.core import Preprocessor
 from simplecpreprocessor.exceptions import ParseError
+from simplecpreprocessor.tokens import Token
 from simplecpreprocessor.filesystem import FakeFile, FakeHandler
 import posixpath
 import os
@@ -477,7 +478,9 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
     def test_platform_constants(self):
         f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',
                                       'ODDPLATFORM\n', '#endif\n'])
-        const = {"ODDPLATFORM": "ODDPLATFORM"}
+        const = {
+            "ODDPLATFORM": [Token.from_string(None, "ODDPLATFORM")]
+        }
         ret = preprocess(f_obj, platform_constants=const)
         self.assertEqual("".join(ret), "ODDPLATFORM\n")
 
@@ -494,7 +497,8 @@ class TestSimpleCPreprocessor(ProfilerMixin, unittest.TestCase):
             self.assertEqual(f_obj.name, __file__)
 
     def test_repeated_macro(self):
-        f_obj = FakeFile("header.h", ['A A\n', ])
-        const = {"A": "value"}
-        ret = preprocess(f_obj, platform_constants=const)
+        f_obj = FakeFile("header.h", [
+            '#define A value\n'
+            'A A\n', ])
+        ret = preprocess(f_obj)
         self.assertEqual("".join(ret), "value value\n")
