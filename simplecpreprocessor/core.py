@@ -1,5 +1,4 @@
-from simplecpreprocessor import filesystem, tokens, platform
-from simplecpreprocessor.exceptions import ParseError
+from simplecpreprocessor import filesystem, tokens, platform, exceptions
 
 PRAGMA_ONCE = "pragma_once"
 IFDEF = "ifdef"
@@ -42,7 +41,7 @@ class Preprocessor(object):
     def process_endif(self, **kwargs):
         line_no = kwargs["line_no"]
         if not self.constraints:
-            raise ParseError("Unexpected #endif on line %s" % line_no)
+            raise exceptions.ParseError("Unexpected #endif on line %s" % line_no)
         (constraint_type, constraint, ignore,
          original_line_no) = self.constraints.pop()
         if ignore:
@@ -52,7 +51,7 @@ class Preprocessor(object):
     def process_else(self, **kwargs):
         line_no = kwargs["line_no"]
         if not self.constraints:
-            raise ParseError("Unexpected #else on line %s" % line_no)
+            raise exceptions.ParseError("Unexpected #else on line %s" % line_no)
         _, constraint, ignore, _ = self.constraints.pop()
         if self.ignore and ignore:
             ignore = False
@@ -159,7 +158,7 @@ class Preprocessor(object):
                 break
         s = "Line %s includes a file %s that can't be found" % (line_no,
                                                                 item)
-        error = ParseError(s)
+        error = exceptions.ParseError(s)
         if item.startswith("<") and item.endswith(">"):
             header = item.strip("<>")
             return self._read_header(header, error)
@@ -168,7 +167,7 @@ class Preprocessor(object):
             return self._read_header(header, error, self.current_name())
         else:
             fmt = "Invalid include on line %s, got %r for include name"
-            raise ParseError(fmt % (line_no, item))
+            raise exceptions.ParseError(fmt % (line_no, item))
 
     def check_fullfile_guard(self):
         if self.last_constraint is None:
@@ -190,7 +189,7 @@ class Preprocessor(object):
                 macro = getattr(self, "process_%s" % macro_name, None)
                 if macro is None:
                     fmt = "Line number %s contains unsupported macro %s"
-                    raise ParseError(fmt % (line_no, macro_name))
+                    raise exceptions.ParseError(fmt % (line_no, macro_name))
                 ret = macro(line_no=line_no, chunk=macro_chunk)
                 if ret is not None:
                     for token in ret:
@@ -208,7 +207,7 @@ class Preprocessor(object):
                 fmt = "#ifndef %s from line %s left open"
             else:
                 fmt = "#else from line %s left open"
-            raise ParseError(fmt % (name, line_no))
+            raise exceptions.ParseError(fmt % (name, line_no))
 
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
