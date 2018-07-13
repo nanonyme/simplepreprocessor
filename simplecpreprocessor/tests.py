@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 import unittest
 from simplecpreprocessor import preprocess
-from simplecpreprocessor.core import Preprocessor, ParseError
+from simplecpreprocessor.core import Preprocessor
+from simplecpreprocessor.exceptions import ParseError
 from simplecpreprocessor.filesystem import FakeFile, FakeHandler
 import posixpath
 import os
