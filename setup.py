@@ -14,6 +14,7 @@ setup(
     packages=["simplecpreprocessor"],
     long_description=long_description,
     use_scm_version=True,
+    extras_require={"tests": ["pytest"]},
     entry_points={
         "console_scripts": [
             "simplecpreprocessor = simplecpreprocessor.__main__:main"
