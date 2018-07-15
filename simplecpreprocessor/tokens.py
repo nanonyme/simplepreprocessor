@@ -38,7 +38,7 @@ class Token(object):
         return cls(line_no, value, False)
 
     def __repr__(self):
-        return "Line {}, value {!r}".format(self.line_no, self.value)
+        return "Line {}, value {!r}".format(self.line_no, self.value) # pragma: no cover
 
 
 class TokenExpander(object):
@@ -72,9 +72,7 @@ class Tokenizer(object):
         comment = self.NO_COMMENT
         for line_no, line in self.source:
             tokens = _tokenize(line_no, line, self.line_ending)
-            token = next(tokens, None)
-            if token is None:
-                continue
+            token = next(tokens)
             for lookahead in tokens:
                 if (token.value != "\\" and
                         lookahead.value == self.line_ending):
@@ -88,11 +86,7 @@ class Tokenizer(object):
                         comment = token
                     else:
                         if token.whitespace:
-                            if (lookahead.whitespace and
-                                    lookahead.value != self.line_ending):
-                                token.value += lookahead.value
-                                continue
-                            elif lookahead.value in COMMENT_START:
+                            if lookahead.value in COMMENT_START:
                                 pass
                             elif lookahead.value == "#":
                                 pass
