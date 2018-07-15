@@ -4,3 +4,4 @@ twine
 setuptools>=12
 wheel
 pytest
+pytest-cov
