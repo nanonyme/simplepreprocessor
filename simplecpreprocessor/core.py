@@ -22,7 +22,7 @@ class Defines(object):
         return self.defines.get(key, default)
 
     def __delitem__(self, key):
-        del self.defines[key]
+        self.defines.pop(key, None)
 
     def __setitem__(self, key, value):
         self.defines[key] = value
@@ -140,10 +140,7 @@ class Preprocessor(object):
             if not token.whitespace:
                 undefine = token.value
                 break
-        try:
-            del self.defines[undefine]
-        except KeyError:
-            pass
+        del self.defines[undefine]
 
     def process_source_chunks(self, chunk):
         if not self.ignore:
