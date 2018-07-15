@@ -2,6 +2,6 @@
 SOURCE_DATE_EPOCH=`git show -s --format=%ct`
 export SOURCE_DATE_EPOCH
 flake8 simplepreprocessor
-py.test
+py.test -v --cov=simplecpreprocessor --cov-config .coveragerc
 python setup.py bdist_wheel
 touch -d @$SOURCE_DATE_EPOCH dist/*
