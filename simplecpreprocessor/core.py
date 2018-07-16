@@ -110,8 +110,8 @@ class Preprocessor(object):
                 pragma = getattr(self, method_name, None)
                 break
         if pragma is None:
-            raise Exception("Unsupported pragma %s on line %s" % (token.value,
-                                                                  line_no))
+            s = "Unsupported pragma %s on line %s" % (token.value, line_no)
+            raise exceptions.ParseError(s)
         else:
             pragma(chunk=chunk, line_no=line_no)
 

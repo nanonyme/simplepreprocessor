@@ -205,7 +205,14 @@ def test_ifndef_left_open_causes_error():
     s = str(excinfo.value)
     assert "ifndef" in s
     assert "left open" in s
-            
+
+
+def test_unsupported_pragma():
+    f_obj = FakeFile("header.h", ["#pragma bogus\n"])
+    with pytest.raises(ParseError) as excinfo:
+        "".join(preprocess(f_obj))
+    assert "Unsupported pragma" in str(excinfo.value)
+                
 
 def test_else_left_open_causes_error():
     f_obj = FakeFile("header.h", ["#ifdef FOO\n", "#else\n"])
