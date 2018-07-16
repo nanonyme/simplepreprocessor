@@ -16,26 +16,19 @@ TOKEN_CONSTANTS = constants_to_token_constants(platform.PLATFORM_CONSTANTS)
 
 class Defines(object):
     def __init__(self, base):
-        self.base = base
-        self.overrides = {}
+        self.defines = base.copy()
 
     def get(self, key, default=None):
-        candidate = self.overrides.get(key, None)
-        if candidate is not None:
-            return candidate
-        candidate = self.base.get(key, None)
-        if candidate is not None:
-            return candidate
-        return default
+        return self.defines.get(key, default)
 
     def __delitem__(self, key):
-        del self.overrides[key]
+        del self.defines[key]
 
     def __setitem__(self, key, value):
-        self.overrides[key] = value
+        self.defines[key] = value
 
     def __contains__(self, key):
-        return key in self.overrides or key in self.base
+        return key in self.defines
 
 
 class Preprocessor(object):
