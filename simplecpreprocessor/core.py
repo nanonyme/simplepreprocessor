@@ -230,7 +230,7 @@ class Preprocessor(object):
             else:
                 fmt = "#else from line {line_no} left open"
             raise exceptions.ParseError(fmt.format(name=name,
-                                                    line_no=line_no))
+                                                   line_no=line_no))
 
 
 def preprocess(f_object, line_ending="\n", include_paths=(),

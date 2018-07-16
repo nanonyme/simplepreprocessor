@@ -8,6 +8,7 @@ def extract_platform_spec():
     bitness, _ = platform.architecture()
     return system, bitness
 
+
 def calculate_windows_constants(bitness):
     constants = {}
     if bitness == "32bit":
