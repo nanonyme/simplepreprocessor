@@ -157,10 +157,9 @@ class Preprocessor(object):
             constraint, constraint_type = item
             if constraint_type == IFDEF:
                 return constraint not in self.defines
-            elif constraint_type == IFNDEF:
-                return constraint in self.defines
             else:
-                raise Exception("Bug, constraint type %s" % constraint_type)
+                assert constraint_type == IFNDEF
+                return constraint in self.defines
 
     def _read_header(self, header, error, anchor_file=None):
         if header not in self.ignore_headers:
@@ -225,12 +224,13 @@ class Preprocessor(object):
         if not self.header_stack and self.constraints:
             constraint_type, name, _, line_no = self.constraints[-1]
             if constraint_type is IFDEF:
-                fmt = "#ifdef %s from line %s left open"
+                fmt = "#ifdef {name} from line {line_no} left open"
             elif constraint_type is IFNDEF:
-                fmt = "#ifndef %s from line %s left open"
+                fmt = "#ifndef {name} from line {line_no} left open"
             else:
-                fmt = "#else from line %s left open"
-            raise exceptions.ParseError(fmt % (name, line_no))
+                fmt = "#else from line {line_no} left open"
+            raise exceptions.ParseError(fmt.format(name=name,
+                                                    line_no=line_no))
 
 
 def preprocess(f_object, line_ending="\n", include_paths=(),
