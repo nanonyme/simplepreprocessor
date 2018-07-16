@@ -38,7 +38,7 @@ class Token(object):
         return cls(line_no, value, False)
 
     def __repr__(self):
-        return "Line {}, value {!r}".format(self.line_no, self.value) # pragma: no cover
+        return "Line {}, value {!r}".format(self.line_no, self.value)  # pragma: no cover
 
 
 class TokenExpander(object):

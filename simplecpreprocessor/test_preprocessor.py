@@ -17,8 +17,8 @@ import mock
 profiler = None
 
 extract_platform_spec_path = ("simplecpreprocessor.platform."
-    "extract_platform_spec"
-)
+                              "extract_platform_spec"
+                              )
 
 
 def setup_module(module):
@@ -212,7 +212,7 @@ def test_unsupported_pragma():
     with pytest.raises(ParseError) as excinfo:
         "".join(preprocess(f_obj))
     assert "Unsupported pragma" in str(excinfo.value)
-                
+
 
 def test_else_left_open_causes_error():
     f_obj = FakeFile("header.h", ["#ifdef FOO\n", "#else\n"])
@@ -221,7 +221,7 @@ def test_else_left_open_causes_error():
     s = str(excinfo.value)
     assert "else" in s
     assert "left open" in s
-                                    
+
 
 def test_unexpected_macro_gives_parse_error():
     f_obj = FakeFile("header.h", ["#something_unsupported foo bar\n"])
@@ -339,12 +339,13 @@ def test_lines_normalize_custom():
     ret = preprocess(f_obj, line_ending="\r\n")
     assert "".join(ret) == expected
 
+
 def test_invalid_include():
     f_obj = FakeFile("header.h", ["#include bogus\n"])
     with pytest.raises(ParseError) as excinfo:
         "".join(preprocess(f_obj))
     assert "Invalid include" in str(excinfo.value)
-    
+
 
 def test_include_local_file_with_subdirectory():
     other_header = "somedirectory/other.h"
@@ -421,7 +422,7 @@ def test_include_preresolved():
     handler.resolved[header] = path
     ret = preprocess(f_obj, header_handler=handler)
     assert "".join(ret) == "1\n"
-                        
+
 
 def test_tab_macro_indentation():
     f_obj = FakeFile("header.h", [
@@ -671,7 +672,7 @@ def test_platform():
             mock_spec.return_value = "The Engine", "32it"
             calculate_platform_constants()
         assert "Unsupported platform" in str(excinfo.value)
-                                             
+
     system = platform.system()
     bitness, _ = platform.architecture()
     assert extract_platform_spec() == (system, bitness)
