@@ -404,13 +404,24 @@ def test_ifdef_with_comment():
 
 def test_include_with_path_list():
     f_obj = FakeFile("header.h", ['#include <other.h>\n'])
-    handler = FakeHandler({posixpath.join("subdirectory",
+    directory = "subdirectory"
+    handler = FakeHandler({posixpath.join(directory,
                                           "other.h"): ["1\n"]})
-    include_paths = ["subdirectory"]
+    include_paths = [directory]
     ret = preprocess(f_obj, include_paths=include_paths,
                      header_handler=handler)
     assert "".join(ret) == "1\n"
 
+
+def test_include_preresolved():
+    f_obj = FakeFile("header.h", ['#include <other.h>\n'])
+    header = "other.h"
+    path = posixpath.join("subdirectory", header)
+    handler = FakeHandler({path: ["1\n"]})
+    handler.resolved[header] = path
+    ret = preprocess(f_obj, header_handler=handler)
+    assert "".join(ret) == "1\n"
+                        
 
 def test_tab_macro_indentation():
     f_obj = FakeFile("header.h", [
