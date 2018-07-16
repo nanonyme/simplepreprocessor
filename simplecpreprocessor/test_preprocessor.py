@@ -566,6 +566,17 @@ def test_repeated_macro():
     ret = preprocess(f_obj)
     assert "".join(ret) == "value value\n"
 
+
+def test_platform_undefine():
+    with mock.patch(extract_platform_spec_path) as mock_spec:
+        mock_spec.return_value = "Linux", "32bit"
+        f_obj = FakeFile("header.h", [
+            '#undef __i386__\n'
+            '__i386__\n', ])
+        ret = preprocess(f_obj)
+        assert "".join(ret) == "__i386__\n"
+
+
 def test_platform():
     with mock.patch(extract_platform_spec_path) as mock_spec:
         mock_spec.return_value = "Linux", "32bit"
