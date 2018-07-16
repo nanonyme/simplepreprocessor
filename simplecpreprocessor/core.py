@@ -22,7 +22,7 @@ class Defines(object):
         return self.defines.get(key, default)
 
     def __delitem__(self, key):
-        del self.defines[key]
+        self.defines.pop(key, None)
 
     def __setitem__(self, key, value):
         self.defines[key] = value
@@ -110,8 +110,8 @@ class Preprocessor(object):
                 pragma = getattr(self, method_name, None)
                 break
         if pragma is None:
-            raise Exception("Unsupported pragma %s on line %s" % (token.value,
-                                                                  line_no))
+            s = "Unsupported pragma %s on line %s" % (token.value, line_no)
+            raise exceptions.ParseError(s)
         else:
             pragma(chunk=chunk, line_no=line_no)
 
@@ -140,10 +140,7 @@ class Preprocessor(object):
             if not token.whitespace:
                 undefine = token.value
                 break
-        try:
-            del self.defines[undefine]
-        except KeyError:
-            pass
+        del self.defines[undefine]
 
     def process_source_chunks(self, chunk):
         if not self.ignore:
@@ -160,10 +157,9 @@ class Preprocessor(object):
             constraint, constraint_type = item
             if constraint_type == IFDEF:
                 return constraint not in self.defines
-            elif constraint_type == IFNDEF:
-                return constraint in self.defines
             else:
-                raise Exception("Bug, constraint type %s" % constraint_type)
+                assert constraint_type == IFNDEF
+                return constraint in self.defines
 
     def _read_header(self, header, error, anchor_file=None):
         if header not in self.ignore_headers:
@@ -228,12 +224,13 @@ class Preprocessor(object):
         if not self.header_stack and self.constraints:
             constraint_type, name, _, line_no = self.constraints[-1]
             if constraint_type is IFDEF:
-                fmt = "#ifdef %s from line %s left open"
+                fmt = "#ifdef {name} from line {line_no} left open"
             elif constraint_type is IFNDEF:
-                fmt = "#ifndef %s from line %s left open"
+                fmt = "#ifndef {name} from line {line_no} left open"
             else:
-                fmt = "#else from line %s left open"
-            raise exceptions.ParseError(fmt % (name, line_no))
+                fmt = "#else from line {line_no} left open"
+            raise exceptions.ParseError(fmt.format(name=name,
+                                                    line_no=line_no))
 
 
 def preprocess(f_object, line_ending="\n", include_paths=(),

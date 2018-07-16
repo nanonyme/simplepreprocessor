@@ -177,21 +177,51 @@ def test_complex_ignore():
 
 def test_extra_endif_causes_error():
     input_list = ["#endif\n"]
-    with pytest.raises(ParseError):
+    with pytest.raises(ParseError) as excinfo:
         "".join(preprocess(input_list))
+    assert "Unexpected #endif" in str(excinfo)
+
+
+def test_extra_else_causes_error():
+    input_list = ["#else\n"]
+    with pytest.raises(ParseError) as excinfo:
+        "".join(preprocess(input_list))
+    assert "Unexpected #else" in str(excinfo.value)
 
 
 def test_ifdef_left_open_causes_error():
     f_obj = FakeFile("header.h", ["#ifdef FOO\n"])
-    with pytest.raises(ParseError):
+    with pytest.raises(ParseError) as excinfo:
         "".join(preprocess(f_obj))
+    s = str(excinfo.value)
+    assert "ifdef" in s
+    assert "left open" in s
 
 
 def test_ifndef_left_open_causes_error():
     f_obj = FakeFile("header.h", ["#ifndef FOO\n"])
-    with pytest.raises(ParseError):
+    with pytest.raises(ParseError) as excinfo:
         "".join(preprocess(f_obj))
+    s = str(excinfo.value)
+    assert "ifndef" in s
+    assert "left open" in s
 
+
+def test_unsupported_pragma():
+    f_obj = FakeFile("header.h", ["#pragma bogus\n"])
+    with pytest.raises(ParseError) as excinfo:
+        "".join(preprocess(f_obj))
+    assert "Unsupported pragma" in str(excinfo.value)
+                
+
+def test_else_left_open_causes_error():
+    f_obj = FakeFile("header.h", ["#ifdef FOO\n", "#else\n"])
+    with pytest.raises(ParseError) as excinfo:
+        "".join(preprocess(f_obj))
+    s = str(excinfo.value)
+    assert "else" in s
+    assert "left open" in s
+                                    
 
 def test_unexpected_macro_gives_parse_error():
     f_obj = FakeFile("header.h", ["#something_unsupported foo bar\n"])
@@ -309,6 +339,12 @@ def test_lines_normalize_custom():
     ret = preprocess(f_obj, line_ending="\r\n")
     assert "".join(ret) == expected
 
+def test_invalid_include():
+    f_obj = FakeFile("header.h", ["#include bogus\n"])
+    with pytest.raises(ParseError) as excinfo:
+        "".join(preprocess(f_obj))
+    assert "Invalid include" in str(excinfo.value)
+    
 
 def test_include_local_file_with_subdirectory():
     other_header = "somedirectory/other.h"
