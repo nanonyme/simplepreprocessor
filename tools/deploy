@@ -10,7 +10,7 @@ TEMPLATE = "wheelhouse/simplecpreprocessor-{version}-py[23]-none-any.whl"
 def publish():
 
     with open("version.txt") as version_file:
-        version = version_file.read.strip()
+        version = version_file.read().strip()
 
     deliverables = glob.glob(TEMPLATE.format(version=version))
     if not deliverables:
