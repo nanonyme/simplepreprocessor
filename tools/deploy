@@ -19,3 +19,6 @@ def publish():
         cmd = ["twine", "upload", "--skip-existing"]
         cmd.extend(deliverables)
         subprocess.check_call(cmd)
+
+if __name__ == "__main__":
+    publish()
