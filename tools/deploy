@@ -5,7 +5,7 @@ import glob
 import subprocess
 
 URL = "https://pypi.org/pypi/simplecpreprocessor/{version}/json"
-TEMPLATE = "wheelhouse/simplecpreprocessor-{version}-py?-none-any.whl"
+TEMPLATE = "wheelhouse/simplecpreprocessor-{version}-py[23]-none-any.whl"
 
 
 def publish():
