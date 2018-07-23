@@ -9,8 +9,6 @@ script: ./tools/test
 cache:
   directories:
     - wheelhouse
-git:
-  depth: 3
 deploy:
   skip_cleanup: true
   provider: script
