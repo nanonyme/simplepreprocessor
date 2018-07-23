@@ -1,6 +1,27 @@
-#!/bin/sh -xe
-SCRIPT=$(readlink -f "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-VERSION=$(${SCRIPTPATH}/get_version)
-pip download simplecpreprocessor==$VERSION >/dev/null 2>&1 && echo "Already published" && exit 0
-twine upload wheelhouse/simplecpreprocessor-*.whl
+#!/usr/bin/env python
+from __future__ import print_function
+import requests
+import glob
+import subprocess
+
+URL = "https://pypi.org/pypi/simplecpreprocessor/{version}/json"
+TEMPLATE = "wheelhouse/simplecpreprocessor-{version}-py[23]-none-any.whl"
+
+
+def publish():
+
+    with open("version.txt") as version_file:
+        version = version_file.read.strip()
+
+    res = requests.open(URL.format(version=version))
+    if res.status_code == 404:
+        print("Already published")
+    else:
+        res.raise_for_status()
+        deliverables = glob.glob(TEMPLATE.format(version=version))
+        if not deliverables:
+            raise Exception("Nothing to upload")
+        else:
+            cmd = ["twine", "upload"]
+            cmd.extend(deliverables)
+            subprocess.check_call(cmd)
