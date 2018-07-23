@@ -6,4 +6,4 @@ then
 fi
 python setup.py bdist_wheel
 pip wheel --wheel-dir wheelhouse --find-links dist --no-cache-dir --find-links wheelhouse.old -r requirements.txt
-pip install --no-index --find-links wheelhouse -r requirements.txt
+pip install --no-index --find-links wheelhouse -r requirements.txt --upgrade

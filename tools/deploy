@@ -4,7 +4,6 @@ import requests
 import glob
 import subprocess
 
-URL = "https://pypi.org/pypi/simplecpreprocessor/{version}/json"
 TEMPLATE = "wheelhouse/simplecpreprocessor-{version}-py[23]-none-any.whl"
 
 
@@ -13,15 +12,10 @@ def publish():
     with open("version.txt") as version_file:
         version = version_file.read.strip()
 
-    res = requests.open(URL.format(version=version))
-    if res.status_code == 404:
-        print("Already published")
+    deliverables = glob.glob(TEMPLATE.format(version=version))
+    if not deliverables:
+        raise Exception("Nothing to upload")
     else:
-        res.raise_for_status()
-        deliverables = glob.glob(TEMPLATE.format(version=version))
-        if not deliverables:
-            raise Exception("Nothing to upload")
-        else:
-            cmd = ["twine", "upload"]
-            cmd.extend(deliverables)
-            subprocess.check_call(cmd)
+        cmd = ["twine", "upload", "--skip-existing"]
+        cmd.extend(deliverables)
+        subprocess.check_call(cmd)
