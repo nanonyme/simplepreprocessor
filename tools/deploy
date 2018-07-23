@@ -3,4 +3,4 @@ SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 VERSION=$(${SCRIPTPATH}/get_version)
 pip download simplecpreprocessor==$VERSION >/dev/null 2>&1 && echo "Already published" && exit 0
-twine upload wheelhouse/simplecpreprocessor.*
+twine upload wheelhouse/simplecpreprocessor-*.whl
