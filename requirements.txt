@@ -3,3 +3,4 @@ twine
 setuptools>=12
 wheel
 simplecpreprocessor
+requests
