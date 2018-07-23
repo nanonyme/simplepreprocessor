@@ -14,11 +14,10 @@ def publish():
         version = version_file.read.strip()
 
     res = requests.open(URL.format(version=version))
-    res.raise_for_status()
-    releases = res.json()["releases"]
-    if version in releases:
+    if res.status_code == 404:
         print("Already published")
     else:
+        res.raise_for_status()
         deliverables = glob.glob(TEMPLATE.format(version=version))
         if not deliverables:
             raise Exception("Nothing to upload")
