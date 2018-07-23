@@ -1,6 +1,5 @@
 #!/bin/sh -xe
 SOURCE_DATE_EPOCH=`git show -s --format=%ct`
 export SOURCE_DATE_EPOCH
-python -m unittest discover -v
-python setup.py bdist_wheel
-touch -d @$SOURCE_DATE_EPOCH dist/*
+python -m unittest -v simplecpreprocessor.test
+touch -d @$SOURCE_DATE_EPOCH wheelhouse/simplecpreprocessor.*
