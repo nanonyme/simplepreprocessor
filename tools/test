@@ -1,5 +1,5 @@
 #!/bin/sh -xe
 SOURCE_DATE_EPOCH=`git show -s --format=%ct`
 export SOURCE_DATE_EPOCH
-python -m unittest -v simplecpreprocessor.test
+python -m unittest -v simplecpreprocessor.tests
 touch -d @$SOURCE_DATE_EPOCH wheelhouse/simplecpreprocessor.*
