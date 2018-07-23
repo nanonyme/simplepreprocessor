@@ -1,7 +1,8 @@
 #!/bin/sh -xe
+git describe > version.txt
 if [ -d wheelhouse ]
 then
     mv wheelhouse wheelhouse.old
 fi
-pip wheel --wheel-dir wheelhouse . --no-cache-dir --find-links wheelhouse.old
-pip install --no-index --find-links wheelhouse -r requirements.txt
+pip wheel --wheel-dir wheelhouse --find-links . --no-cache-dir --find-links wheelhouse.old --requirements requirements.txt
+pip install --no-index --find-links wheelhouse simplecpreprocesor

@@ -3,6 +3,9 @@ from setuptools import setup
 
 long_description = "http://github.com/nanonyme/simplepreprocessor"
 
+with open("version.txt") as version_file:
+    version = version_file.read().strip()
+
 setup(
     name="simplecpreprocessor",
     author="Seppo Yli-Olli",
@@ -13,7 +16,7 @@ setup(
     url="https://github.com/nanonyme/simplecpreprocessor",
     packages=["simplecpreprocessor"],
     long_description=long_description,
-    use_scm_version=True,
+    version=version,
     entry_points={
         "console_scripts": [
             "simplecpreprocessor = simplecpreprocessor:main"
