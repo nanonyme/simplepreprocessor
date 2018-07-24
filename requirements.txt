@@ -1,4 +1,4 @@
 twine
 setuptools>=12
 wheel
-simplecpreprocessor[test]
+simplecpreprocessor[tests]
