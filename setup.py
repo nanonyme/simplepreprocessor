@@ -3,6 +3,13 @@ from setuptools import setup
 
 long_description = "http://github.com/nanonyme/simplepreprocessor"
 
+test_requires = [
+    "pytest", "pytest-cov", "mock", "flake8"
+]
+
+with open("version.txt") as version_file:
+    version = version_file.read().strip()
+
 setup(
     name="simplecpreprocessor",
     author="Seppo Yli-Olli",
@@ -13,8 +20,8 @@ setup(
     url="https://github.com/nanonyme/simplecpreprocessor",
     packages=["simplecpreprocessor"],
     long_description=long_description,
-    use_scm_version=True,
-    extras_require={"tests": ["pytest", "mock"]},
+    version=version,
+    extras_require={"tests": test_requires},
     entry_points={
         "console_scripts": [
             "simplecpreprocessor = simplecpreprocessor.__main__:main"

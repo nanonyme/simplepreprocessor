@@ -1,20 +1,18 @@
 sudo: false
 dist: trusty
 language: python
-install: ./tools/install_deps
+install: ./tools/build
 python:
   - '2.7'
   - '3.6'
-script: ./tools/build
+script: ./tools/test
 cache:
   directories:
     - wheelhouse
-git:
-  depth: 3
 deploy:
   skip_cleanup: true
   provider: script
   script: ./tools/deploy
   on:
     tags: true
-
+		      

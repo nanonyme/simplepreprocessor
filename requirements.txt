@@ -1,8 +1,4 @@
-flake8
-setuptools_scm
 twine
 setuptools>=12
 wheel
-pytest
-pytest-cov
-mock
+simplecpreprocessor[test]

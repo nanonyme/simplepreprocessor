@@ -1,7 +1,7 @@
 #!/bin/sh -xe
-SOURCE_DATE_EPOCH=`git show -s --format=%ct`
-export SOURCE_DATE_EPOCH
-flake8 simplepreprocessor
-py.test -v --cov=simplecpreprocessor --cov-config .coveragerc
-python setup.py bdist_wheel
-touch -d @$SOURCE_DATE_EPOCH dist/*
+if [ -d wheelhouse ]
+then
+    mv wheelhouse wheelhouse.old
+fi
+pip wheel --wheel-dir wheelhouse -r requirements.txt --no-cache-dir --find-links wheelhouse.old
+pip install --no-index --find-links wheelhouse -r requirements.txt
