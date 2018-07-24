@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from setuptools import setup
+import os
 
 long_description = "http://github.com/nanonyme/simplepreprocessor"
 
@@ -7,8 +8,7 @@ test_requires = [
     "pytest", "pytest-cov", "mock", "flake8"
 ]
 
-with open("version.txt") as version_file:
-    version = version_file.read().strip()
+version = os.environ["VERSION"]
 
 setup(
     name="simplecpreprocessor",

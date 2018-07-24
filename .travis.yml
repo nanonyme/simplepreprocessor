@@ -14,5 +14,4 @@ deploy:
   provider: script
   script: ./tools/deploy
   on:
-    tags: true
-		      
+    branch: release/*
