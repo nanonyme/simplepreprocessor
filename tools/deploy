@@ -4,21 +4,25 @@ import requests
 import glob
 import subprocess
 
+
 TEMPLATE = "wheelhouse/simplecpreprocessor-{version}-py[23]-none-any.whl"
 
 
-def publish():
+def get_version():
+    version = subprocess.check_output(["git", "describe", "--tags"])
+    return version.strip()
 
-with open("version.txt") as version_file:
-version = version_file.read().strip()
 
-deliverables = glob.glob(TEMPLATE.format(version=version))
-if not deliverables:
-   raise Exception("Nothing to upload")
-   else:
-   cmd = ["twine", "upload", "--skip-existing"]
-   cmd.extend(deliverables)
-   subprocess.check_call(cmd)
+def publish(version):
 
-   if __name__ == "__main__":
-          publish()
+    deliverables = glob.glob(TEMPLATE.format(version=version))
+    if not deliverables:
+        raise Exception("Nothing to upload")
+    else:
+    cmd = ["twine", "upload", "--skip-existing"]
+    cmd.extend(deliverables)
+    subprocess.check_call(cmd)
+
+
+if __name__ == "__main__":
+    publish(get_version())
