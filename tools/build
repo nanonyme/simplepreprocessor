@@ -10,4 +10,4 @@ fi
 python setup.py bdist_wheel --dist-dir wheelhouse.old
 pip wheel --wheel-dir wheelhouse -r requirements.txt --no-cache-dir --find-links wheelhouse.old $PACKAGE
 pip install --no-index --find-links wheelhouse -r requirements.txt $PACKAGE
-touch -d @$SOURCE_DATE_EPOCH dist/*
+touch -d @$SOURCE_DATE_EPOCH wheelhouse/*
