@@ -1,4 +1,5 @@
 #!/bin/sh -xe
+git describe --tags --abbrev=0 > version.txt
 if [ -d wheelhouse ]
 then
     mv wheelhouse wheelhouse.old
