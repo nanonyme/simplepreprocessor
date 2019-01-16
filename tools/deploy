@@ -19,9 +19,9 @@ def publish(version):
     if not deliverables:
         raise Exception("Nothing to upload")
     else:
-    cmd = ["twine", "upload", "--skip-existing"]
-    cmd.extend(deliverables)
-    subprocess.check_call(cmd)
+        cmd = ["twine", "upload", "--skip-existing"]
+        cmd.extend(deliverables)
+        subprocess.check_call(cmd)
 
 
 if __name__ == "__main__":
