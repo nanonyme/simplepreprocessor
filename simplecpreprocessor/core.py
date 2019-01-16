@@ -1,5 +1,5 @@
 from simplecpreprocessor import filesystem, tokens, platform, exceptions
-
+from simplecpreprocessor.platform import calculate_platform_constants
 PRAGMA_ONCE = "pragma_once"
 IFDEF = "ifdef"
 IFNDEF = "ifndef"
