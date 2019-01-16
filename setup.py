@@ -5,7 +5,7 @@ import os
 long_description = "http://github.com/nanonyme/simplepreprocessor"
 
 test_requires = [
-    "pytest", "pytest-cov", "mock", "flake8"
+    "pytest>=3.6", "pytest-cov", "mock", "flake8"
 ]
 
 version = os.environ["VERSION"]
