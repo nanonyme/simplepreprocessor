@@ -68,6 +68,8 @@ class Tokenizer(object):
 
     def __iter__(self):
         comment = self.NO_COMMENT
+        token = None
+        line_no = 0
         for line_no, line in self.source:
             tokens = _tokenize(line_no, line, self.line_ending)
             token = next(tokens)
@@ -101,6 +103,10 @@ class Tokenizer(object):
                 if lookahead is None:
                     token.chunk_mark = True
                 yield token
+        if token is None or not token.chunk_mark:
+            token = Token.from_string(line_no, self.line_ending)
+            token.chunk_mark = True
+            yield token
 
     def read_chunks(self):
         chunk = []

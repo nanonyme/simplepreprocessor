@@ -88,6 +88,11 @@ def test_wchar_string():
     expected = 'L"FOO"\n'
     run_case(f_obj, expected)
 
+def test_no_trailing_newline():
+    f_obj = FakeFile("header.h", ["#ifdef foo\n",
+        '#endif'])
+    expected = ''
+    run_case(f_obj, expected)
 
 def test_multiline_define():
     f_obj = FakeFile("header.h", ["#define FOO \\\n",
