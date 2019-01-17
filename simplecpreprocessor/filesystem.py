@@ -1,4 +1,5 @@
 import posixpath
+import os.path
 
 SKIP_FILE = object()
 
@@ -22,6 +23,9 @@ class HeaderHandler(object):
 
     def _resolve(self, anchor_file):
         if anchor_file is not None:
+            if os.path.sep != posixpath.sep:
+                anchor_file = anchor_file.replace(os.path.sep,
+                                                  posixpath.sep)
             yield posixpath.dirname(anchor_file)
         for include_path in self.include_paths:
             yield include_path
