@@ -3,8 +3,6 @@ import re
 DEFAULT_LINE_ENDING = "\n"
 TOKEN = re.compile((r"<\w+(?:/\w+)*(?:\.\w+)?>|L?\".+\"|'\w'|/\*|"
                     r"\*/|//|\b\w+\b|\r\n|\n|[ \t]+|\W"))
-DOUBLE_QUOTE = '"'
-SINGLE_QUOTE = "'"
 CHAR = re.compile(r"^'\w'$")
 CHUNK_MARK = object()
 RSTRIP = object()
