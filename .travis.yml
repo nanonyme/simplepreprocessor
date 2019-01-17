@@ -4,7 +4,7 @@ language: python
 install: ./tools/build
 python:
   - '2.7'
-  - '3.6'
+  - '3.7'
 script: ./tools/test
 cache:
   directories:
