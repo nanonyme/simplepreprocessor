@@ -71,7 +71,7 @@ class Tokenizer(object):
         for line_no, line in self.source:
             tokens = _tokenize(line_no, line, self.line_ending)
             token = next(tokens)
-            lookeahead = None
+            lookahead = None
             for lookahead in tokens:
                 if (token.value != "\\" and
                         lookahead.value == self.line_ending):
