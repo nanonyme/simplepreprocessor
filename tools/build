@@ -1,6 +1,6 @@
 #!/bin/sh -xe
 export VERSION=$(git describe --tags)
-PACKAGE="simplecpreprocessor[tests]==$VERSION"
+PACKAGE=".[tests]"
 SOURCE_DATE_EPOCH=`git show -s --format=%ct`
 export SOURCE_DATE_EPOCH
 if [ -d wheelhouse ]
