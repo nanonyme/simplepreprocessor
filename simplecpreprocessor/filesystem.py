@@ -28,6 +28,7 @@ class HeaderHandler(object):
 
     def open_header(self, include_header, skip_file, anchor_file):
         header_path = self.resolved.get(include_header)
+        f = None
         if header_path is not None:
             if skip_file(header_path):
                 return SKIP_FILE
