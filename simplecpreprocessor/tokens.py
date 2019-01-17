@@ -71,6 +71,7 @@ class Tokenizer(object):
         for line_no, line in self.source:
             tokens = _tokenize(line_no, line, self.line_ending)
             token = next(tokens)
+            lookeahead = None
             for lookahead in tokens:
                 if (token.value != "\\" and
                         lookahead.value == self.line_ending):
@@ -97,6 +98,8 @@ class Tokenizer(object):
             if comment.value == "//" and token.value != "\\":
                 comment = self.NO_COMMENT
             if comment is self.NO_COMMENT:
+                if lookahead is None:
+                    token.chunk_mark = True
                 yield token
 
     def read_chunks(self):
