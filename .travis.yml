@@ -10,10 +10,8 @@ cache:
   directories:
     - wheelhouse
 deploy:
-  provider: pypi
-  user: $TWINE_USERNAME
-  password:
-     secure: $TWINE_PASSWORD
-  skip_existing: true
+  skip_cleanup: true
+  provider: script
+  script: ./tools/deploy
   on:
     tags: true
