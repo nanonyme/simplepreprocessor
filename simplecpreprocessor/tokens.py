@@ -9,12 +9,16 @@ RSTRIP = object()
 COMMENT_START = ("/*", "//")
 LINE_ENDINGS = ("\r\n", "\n")
 
+def is_string(s):
+    return re.search("^L?\".+\"$", s)
 
-def _tokenize(line_no, line, line_ending):
+def _tokenize(line_no, line, line_ending, fold_strings_to_null):
     for match in TOKEN.finditer(line):
         s = match.group(0)
         if s in LINE_ENDINGS:
             s = line_ending
+        if fold_strings_to_null and is_string(s):
+            s = "NULL"
         yield Token.from_string(line_no, s)
 
 
@@ -62,16 +66,18 @@ class TokenExpander(object):
 class Tokenizer(object):
     NO_COMMENT = Token.from_constant(None, None)
 
-    def __init__(self, f_obj, line_ending):
+    def __init__(self, f_obj, line_ending, fold_strings_to_null):
         self.source = enumerate(f_obj)
         self.line_ending = line_ending
+        self.fold_strings_to_null = fold_strings_to_null
 
     def __iter__(self):
         comment = self.NO_COMMENT
         token = None
         line_no = 0
         for line_no, line in self.source:
-            tokens = _tokenize(line_no, line, self.line_ending)
+            tokens = _tokenize(line_no, line, self.line_ending,
+                               self.fold_strings_to_null)
             token = next(tokens)
             lookahead = None
             for lookahead in tokens:

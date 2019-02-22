@@ -597,6 +597,10 @@ def test_platform_constants():
     ret = preprocess(f_obj, platform_constants=const)
     assert "".join(ret) == "ODDPLATFORM\n"
 
+def test_string_folding():
+    f_obj = FakeFile("header.h", ['const char* foo = "meep";\n'])
+    ret = preprocess(f_obj, fold_strings_to_null=True)
+    assert "".join(ret) == "const char* foo = NULL;\n"
 
 def test_handler_missing_file():
     handler = FakeHandler([])

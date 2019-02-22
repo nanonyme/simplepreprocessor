@@ -36,7 +36,7 @@ class Preprocessor(object):
     def __init__(self, line_ending=tokens.DEFAULT_LINE_ENDING,
                  include_paths=(), header_handler=None,
                  platform_constants=TOKEN_CONSTANTS,
-                 ignore_headers=()):
+                 ignore_headers=(), fold_strings_to_null=False):
         self.ignore_headers = ignore_headers
         self.include_once = {}
         self.defines = Defines(platform_constants)
@@ -45,6 +45,7 @@ class Preprocessor(object):
         self.line_ending = line_ending
         self.last_constraint = None
         self.header_stack = []
+        self.fold_strings_to_null = fold_strings_to_null
         self.token_expander = tokens.TokenExpander(self.defines)
         if header_handler is None:
             self.headers = filesystem.HeaderHandler(include_paths)
@@ -201,7 +202,8 @@ class Preprocessor(object):
 
     def preprocess(self, f_object, depth=0):
         self.header_stack.append(f_object)
-        tokenizer = tokens.Tokenizer(f_object, self.line_ending)
+        tokenizer = tokens.Tokenizer(f_object, self.line_ending,
+                                     self.fold_strings_to_null)
         for chunk in tokenizer.read_chunks():
             self.last_constraint = None
             if chunk[0].value == "#":
@@ -236,11 +238,12 @@ class Preprocessor(object):
 def preprocess(f_object, line_ending="\n", include_paths=(),
                header_handler=None,
                platform_constants=TOKEN_CONSTANTS,
-               ignore_headers=()):
+               ignore_headers=(), fold_strings_to_null=False):
     r"""
     This preprocessor yields chunks of text that combined results in lines
     delimited with given line ending. There is always a final line ending.
     """
     preprocessor = Preprocessor(line_ending, include_paths, header_handler,
-                                platform_constants, ignore_headers)
+                                platform_constants, ignore_headers,
+                                fold_strings_to_null)
     return preprocessor.preprocess(f_object)
