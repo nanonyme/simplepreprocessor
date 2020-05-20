@@ -1,4 +1,4 @@
 #!/bin/sh -xe
-flake8 simplepreprocessor
+flake8 simplecpreprocessor
 py.test -v --cov=simplecpreprocessor --cov-config .coveragerc
 

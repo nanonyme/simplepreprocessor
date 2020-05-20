@@ -88,11 +88,13 @@ def test_wchar_string():
     expected = 'L"FOO"\n'
     run_case(f_obj, expected)
 
+
 def test_no_trailing_newline():
     f_obj = FakeFile("header.h", ["#ifdef foo\n",
-        '#endif'])
+                                  '#endif'])
     expected = ''
     run_case(f_obj, expected)
+
 
 def test_multiline_define():
     f_obj = FakeFile("header.h", ["#define FOO \\\n",
@@ -597,10 +599,12 @@ def test_platform_constants():
     ret = preprocess(f_obj, platform_constants=const)
     assert "".join(ret) == "ODDPLATFORM\n"
 
+
 def test_string_folding():
     f_obj = FakeFile("header.h", ['const char* foo = "meep";\n'])
     ret = preprocess(f_obj, fold_strings_to_null=True)
     assert "".join(ret) == "const char* foo = NULL;\n"
+
 
 def test_handler_missing_file():
     handler = FakeHandler([])

@@ -9,8 +9,10 @@ RSTRIP = object()
 COMMENT_START = ("/*", "//")
 LINE_ENDINGS = ("\r\n", "\n")
 
+
 def is_string(s):
     return re.search("^L?\".+\"$", s)
+
 
 def _tokenize(line_no, line, line_ending, fold_strings_to_null):
     for match in TOKEN.finditer(line):
@@ -40,7 +42,8 @@ class Token(object):
         return cls(line_no, value, False)
 
     def __repr__(self):
-        return "Line {}, value {!r}".format(self.line_no, self.value)  # pragma: no cover
+        return "Line {}, value {!r}".format(self.line_no,
+                                            self.value)  # pragma: no cover
 
 
 class TokenExpander(object):
