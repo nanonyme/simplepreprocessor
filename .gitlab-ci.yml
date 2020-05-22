@@ -1,0 +1,27 @@
+image: debian:10
+
+stages:
+- test
+- deploy
+
+before_script:
+  - apt update
+  - apt install -y git
+  - apt clean -y
+
+test:
+  stage: test
+  interruptible: true
+  script:
+  - ./tools/build
+  - ./tools/test
+  except:
+  - tags
+
+deploy:
+  stage: deploy
+  script:
+  - ./tools/build
+  - ./tools/deploy
+  only:
+  - tags
