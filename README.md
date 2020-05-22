@@ -11,11 +11,6 @@ for a compatible wrapper.
 Line endings are by default normalized to unix but a parameter can be given to customize this
 behaviour.
 
-
-Travis
------------
-![Latest travis build](https://travis-ci.org/nanonyme/simplecpreprocessor.svg?branch=master)
-
 Gotchas
 ---------
 
