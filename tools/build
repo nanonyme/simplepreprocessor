@@ -1,5 +1,5 @@
 #!/bin/sh -xe
-export VERSION=$(git describe --tags)
+export VERSION=$(git describe --tags|perl -lpe 's/^v(\d+(?:\.\d+)+)-(\d+)-[^-]+$/$1.dev$2/')
 PACKAGE=".[tests]"
 SOURCE_DATE_EPOCH=`git show -s --format=%ct`
 export SOURCE_DATE_EPOCH
