@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from setuptools import setup
 import os
 
-long_description = "http://github.com/nanonyme/simplepreprocessor"
+long_description = "https://gitlab.com/nanonyme/simplecpreprocessor"
 
 test_requires = [
     "pytest>=3.6", "pytest-cov", "mock", "flake8"
@@ -17,7 +17,7 @@ setup(
     description="Simple C preprocessor for usage eg before CFFI",
     keywords="python c preprocessor",
     license="BSD",
-    url="https://github.com/nanonyme/simplecpreprocessor",
+    url="https://gitlab.com/nanonyme/simplecpreprocessor",
     packages=["simplecpreprocessor"],
     long_description=long_description,
     version=version,
