@@ -145,7 +145,10 @@ class Preprocessor(object):
     def process_source_chunks(self, chunk):
         if not self.ignore:
             for token in self.token_expander.expand_tokens(chunk):
-                yield token.value
+                if self.fold_strings_to_null and tokens.is_string(token.value):
+                    yield "NULL"
+                else:
+                    yield token.value
 
     def skip_file(self, name):
         item = self.include_once.get(name)
@@ -201,8 +204,7 @@ class Preprocessor(object):
 
     def preprocess(self, f_object, depth=0):
         self.header_stack.append(f_object)
-        tokenizer = tokens.Tokenizer(f_object, self.line_ending,
-                                     self.fold_strings_to_null)
+        tokenizer = tokens.Tokenizer(f_object, self.line_ending)
         for chunk in tokenizer.read_chunks():
             self.last_constraint = None
             if chunk[0].value == "#":
