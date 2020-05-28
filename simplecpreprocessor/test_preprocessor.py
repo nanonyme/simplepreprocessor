@@ -606,6 +606,16 @@ def test_string_folding():
     assert "".join(ret) == "const char* foo = NULL;\n"
 
 
+def test_string_folding_inside_condition():
+    f_obj = FakeFile("header.h", [
+        '#ifndef FOO\n',
+        'const char* foo = "meep";\n',
+        "#endif\n"
+    ])
+    ret = preprocess(f_obj, fold_strings_to_null=True)
+    assert "".join(ret) == "const char* foo = NULL;\n"
+
+
 def test_handler_missing_file():
     handler = FakeHandler([])
     assert handler.parent_open("does_not_exist") is None
