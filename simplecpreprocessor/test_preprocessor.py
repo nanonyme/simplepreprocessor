@@ -439,11 +439,13 @@ def test_tab_macro_indentation():
     run_case(f_obj, expected)
 
 
-def test_space_macro_indentation():
-    f_obj = FakeFile("header.h", [
-        "    #define FOO 1\n",
-        "    FOO\n"])
-    expected = "    1\n"
+def test_space_pragma_pack_passthrough():
+    instructions = (
+        "#pragma pack(push, 8)\n",
+        "#pragma pack(pop)\n"
+    )
+    f_obj = FakeFile("header.h", instructions)
+    expected = "".join(instructions)
     run_case(f_obj, expected)
 
 

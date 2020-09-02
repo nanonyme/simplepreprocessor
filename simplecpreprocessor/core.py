@@ -113,10 +113,17 @@ class Preprocessor(object):
             s = "Unsupported pragma %s on line %s" % (token.value, line_no)
             raise exceptions.ParseError(s)
         else:
-            pragma(chunk=chunk, line_no=line_no)
+            ret = pragma(chunk=chunk, line_no=line_no)
+            if ret is not None:
+                yield from ret
 
     def process_pragma_once(self, **_):
         self.include_once[self.current_name()] = PRAGMA_ONCE
+
+    def process_pragma_pack(self, chunk, **_):
+        yield "#pragma"
+        for token in chunk:
+            yield token.value
 
     def current_name(self):
         return self.header_stack[-1].name
