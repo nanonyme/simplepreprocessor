@@ -1,8 +1,13 @@
+from enum import Enum, auto
+
 from simplecpreprocessor import filesystem, tokens, platform, exceptions
-PRAGMA_ONCE = "pragma_once"
-IFDEF = "ifdef"
-IFNDEF = "ifndef"
-ELSE = "else"
+
+
+class Tag(Enum):
+    PRAGMA_ONCE = auto()
+    IFDEF = auto()
+    IFNDEF = auto()
+    ELSE = auto()
 
 
 def constants_to_token_constants(constants):
@@ -85,7 +90,7 @@ class Preprocessor(object):
         elif not self.ignore and not ignore:
             ignore = True
             self.ignore = True
-        self.constraints.append((ELSE, constraint, ignore, line_no))
+        self.constraints.append((Tag.ELSE, constraint, ignore, line_no))
 
     def process_ifdef(self, **kwargs):
         chunk = kwargs["chunk"]
@@ -96,9 +101,9 @@ class Preprocessor(object):
                 break
         if not self.ignore and condition not in self.defines:
             self.ignore = True
-            self.constraints.append((IFDEF, condition, True, line_no))
+            self.constraints.append((Tag.IFDEF, condition, True, line_no))
         else:
-            self.constraints.append((IFDEF, condition, False, line_no))
+            self.constraints.append((Tag.IFDEF, condition, False, line_no))
 
     def process_pragma(self, **kwargs):
         chunk = kwargs["chunk"]
@@ -118,7 +123,7 @@ class Preprocessor(object):
                 yield from ret
 
     def process_pragma_once(self, **_):
-        self.include_once[self.current_name()] = PRAGMA_ONCE
+        self.include_once[self.current_name()] = Tag.PRAGMA_ONCE
 
     def process_pragma_pack(self, chunk, **_):
         yield "#pragma"
@@ -137,9 +142,9 @@ class Preprocessor(object):
                 break
         if not self.ignore and condition in self.defines:
             self.ignore = True
-            self.constraints.append((IFNDEF, condition, True, line_no))
+            self.constraints.append((Tag.IFNDEF, condition, True, line_no))
         else:
-            self.constraints.append((IFNDEF, condition, False, line_no))
+            self.constraints.append((Tag.IFNDEF, condition, False, line_no))
 
     def process_undef(self, **kwargs):
         chunk = kwargs["chunk"]
@@ -159,16 +164,16 @@ class Preprocessor(object):
 
     def skip_file(self, name):
         item = self.include_once.get(name)
-        if item is PRAGMA_ONCE:
+        if item is Tag.PRAGMA_ONCE:
             return True
         elif item is None:
             return False
         else:
             constraint, constraint_type = item
-            if constraint_type == IFDEF:
+            if constraint_type is Tag.IFDEF:
                 return constraint not in self.defines
             else:
-                assert constraint_type == IFNDEF
+                assert constraint_type is Tag.IFNDEF
                 return constraint in self.defines
 
     def _read_header(self, header, error, anchor_file=None):
@@ -233,9 +238,9 @@ class Preprocessor(object):
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
             constraint_type, name, _, line_no = self.constraints[-1]
-            if constraint_type is IFDEF:
+            if constraint_type is Tag.IFDEF:
                 fmt = "#ifdef {name} from line {line_no} left open"
-            elif constraint_type is IFNDEF:
+            elif constraint_type is Tag.IFNDEF:
                 fmt = "#ifndef {name} from line {line_no} left open"
             else:
                 fmt = "#else from line {line_no} left open"
