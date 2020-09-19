@@ -1,13 +1,13 @@
-from enum import Enum, auto
+import enum
 
 from simplecpreprocessor import filesystem, tokens, platform, exceptions
 
 
-class Tag(Enum):
-    PRAGMA_ONCE = auto()
-    IFDEF = auto()
-    IFNDEF = auto()
-    ELSE = auto()
+class Tag(enum.Enum):
+    PRAGMA_ONCE = "#pragma_once"
+    IFDEF = "#ifdef"
+    IFNDEF = "#ifndef"
+    ELSE = "#else"
 
 
 def constants_to_token_constants(constants):
@@ -238,13 +238,9 @@ class Preprocessor(object):
         self.header_stack.pop()
         if not self.header_stack and self.constraints:
             constraint_type, name, _, line_no = self.constraints[-1]
-            if constraint_type is Tag.IFDEF:
-                fmt = "#ifdef {name} from line {line_no} left open"
-            elif constraint_type is Tag.IFNDEF:
-                fmt = "#ifndef {name} from line {line_no} left open"
-            else:
-                fmt = "#else from line {line_no} left open"
-            raise exceptions.ParseError(fmt.format(name=name,
+            fmt = "{tag} {name} from line {line_no} left open"
+            raise exceptions.ParseError(fmt.format(tag=constraint_type.value,
+                                                   name=name,
                                                    line_no=line_no))
 
 
