@@ -32,7 +32,7 @@ test:
 deploy:
   stage: deploy
   script:
-  - flit build --format wheel
+  - flit build
   - flit publish
   only:
   - tags
