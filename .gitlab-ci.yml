@@ -1,27 +1,38 @@
 image: debian:10
 
+variables:
+  FLIT_ROOT_INSTALL: 1
+
 stages:
 - test
 - deploy
 
 before_script:
+  - PATH=$PATH:~/.local/bin
   - apt update
-  - apt install -y git python3 python3-setuptools python3-pip python3-wheel
-  - apt clean -y
+  - apt install -y git python3-pip
+  - python3 -m pip install --upgrade flit pip wheel setuptools
+  - |
+    SOURCE_DATE_EPOCH=`git show -s --format=%ct`
+    export SOURCE_DATE_EPOCH
+    VERSION=$(git describe --tags|perl -lpe 's/^v(\d+(?:\.\d+)+)-(\d+)-[^-]+$/$1.dev$2/')
+    echo "__version__ = \"$VERSION\"" > simplecpreprocessor/version.py
 
 test:
   stage: test
   interruptible: true
   script:
-  - ./tools/build
-  - ./tools/test
+  - flit build
+  - flit install
+  - flake8 simplecpreprocessor
+  - py.test -v --cov=simplecpreprocessor --cov-config .coveragerc
   except:
   - tags
 
 deploy:
   stage: deploy
   script:
-  - ./tools/build
-  - ./tools/deploy
+  - flit build --format wheel
+  - flit publish
   only:
   - tags
