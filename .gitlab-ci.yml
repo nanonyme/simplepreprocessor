@@ -33,6 +33,6 @@ deploy:
   stage: deploy
   script:
   - flit build --format wheel
-  - flit publish
+  - flit publish --format wheel
   only:
   - tags
