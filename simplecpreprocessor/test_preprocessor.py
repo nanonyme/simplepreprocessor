@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import pytest
+import ntpath
 from simplecpreprocessor import preprocess
 from simplecpreprocessor.core import Preprocessor
 from simplecpreprocessor.exceptions import ParseError, UnsupportedPlatform
@@ -45,6 +46,13 @@ def test_define():
     f_obj = FakeFile("header.h", ["#define FOO 1\n",
                                   "FOO\n"])
     expected = "1\n"
+    run_case(f_obj, expected)
+
+
+def test_define_no_trailing_newline():
+    f_obj = FakeFile("header.h", ["#define FOO 1\n",
+                                  "FOO"])
+    expected = "1"
     run_case(f_obj, expected)
 
 
@@ -360,6 +368,15 @@ def test_include_local_file_with_subdirectory():
     handler = FakeHandler({other_header: ["1\n"]})
     ret = preprocess(f_obj, header_handler=handler)
     assert "".join(ret) == "1\n"
+
+
+def test_include_local_file_with_subdirectory_windows():
+    with mock.patch("os.path", ntpath):
+        other_header = "somedirectory/other.h"
+        f_obj = FakeFile("foo\\header.h", ['#include "%s"\n' % other_header])
+        handler = FakeHandler({f"foo/{other_header}": ["1\n"]})
+        ret = preprocess(f_obj, header_handler=handler)
+        assert "".join(ret) == "1\n"
 
 
 def test_include_local_precedence():
