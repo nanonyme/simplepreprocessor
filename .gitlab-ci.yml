@@ -25,9 +25,13 @@ test:
   - flit build
   - flit install
   - flake8 simplecpreprocessor
-  - py.test -v --cov=simplecpreprocessor --cov-config .coveragerc
+  - py.test -v --cov=simplecpreprocessor --cov-config .coveragerc --cov-report=html
   except:
   - tags
+  artifacts:
+    when: always
+    paths:
+      - ${CI_PROJECT_DIR}/htmlcov
 
 deploy:
   stage: deploy
