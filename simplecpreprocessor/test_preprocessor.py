@@ -49,6 +49,13 @@ def test_define():
     run_case(f_obj, expected)
 
 
+def test_define_no_trailing_newline():
+    f_obj = FakeFile("header.h", ["#define FOO 1\n",
+                                  "FOO"])
+    expected = "1"
+    run_case(f_obj, expected)
+
+
 def test_string_token_special_characters():
     line = '"!/-*+"\n'
     f_obj = FakeFile("header.h", [line])
