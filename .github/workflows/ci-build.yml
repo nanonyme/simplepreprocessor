@@ -1,5 +1,8 @@
 name: Test build
-on: [push]
+on:
+  push:
+    tags-ignore:
+      - v*
 jobs:
   Application-Build:
     runs-on: ubuntu-latest
