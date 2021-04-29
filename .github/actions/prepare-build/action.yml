@@ -7,8 +7,5 @@ runs:
       sudo apt update
       sudo apt install -y git python3-pip python3-testresources
       python3 -m pip install --upgrade flit pip wheel setuptools
-      SOURCE_DATE_EPOCH=`git show -s --format=%ct`
-      export SOURCE_DATE_EPOCH
-      VERSION=$(git describe --tags|perl -lpe 's/^v(\d+(?:\.\d+)+)-(\d+)-[^-]+$/$1.dev$2/')
-      echo "__version__ = \"$VERSION\"" > simplecpreprocessor/version.py
+      echo SOURCE_DATE_EPOCH=`git show -s --format=%ct` >> $GITHUB_ENV
     shell: bash
