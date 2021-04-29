@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 import platform
-from simplecpreprocessor.exceptions import UnsupportedPlatform
+from .exceptions import UnsupportedPlatform
 
 
 def extract_platform_spec():

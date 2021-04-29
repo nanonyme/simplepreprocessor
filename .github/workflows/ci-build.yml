@@ -1,0 +1,14 @@
+name: Test build
+on: [push]
+jobs:
+  Application-Build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/prepare-build
+    - run: |
+        echo __version__ = \"0.0.1\" > simplecpreprocessor/version.py
+        flit build
+        flit install
+        flake8 simplecpreprocessor
+        py.test -v --cov=simplecpreprocessor --cov-config .coveragerc --cov-report=xml
