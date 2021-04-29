@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 module = "simplecpreprocessor"
 author = "Seppo Yli-Olli"
 author-email = "seppo.yli-olli@iki.fi"
-home-page = "https://gitlab.com/nanonyme/simplecpreprocessor"
+home-page = "https://github.com/nanonyme/simplecpreprocessor"
 classifiers = ["License :: OSI Approved :: MIT License"]
 description-file = "README.md"
 requires-python = ">=3.7"
