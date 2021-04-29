@@ -1,0 +1,16 @@
+name: Test build
+on:
+  push:
+    tags:
+      - v*
+jobs:
+  Application-Release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/prepare-build
+    - run: |
+        VERSION=${git describe --tags)
+        echo "__version__ = \"$VERSION\"" > simplecpreprocessor/version.py
+        flit build
+        flit publish
