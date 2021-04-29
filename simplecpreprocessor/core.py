@@ -1,6 +1,6 @@
 import enum
 
-from simplecpreprocessor import filesystem, tokens, platform, exceptions
+from . import filesystem, tokens, platform, exceptions
 
 
 class Tag(enum.Enum):
