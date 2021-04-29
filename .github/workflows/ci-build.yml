@@ -1,8 +1,5 @@
 name: Test build
-on:
-  push:
-    tags-ignore:
-      - v*
+on: [pull_request]
 jobs:
   Application-Build:
     runs-on: ubuntu-latest
