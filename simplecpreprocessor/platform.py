@@ -10,7 +10,9 @@ def extract_platform_spec():
 
 
 def calculate_windows_constants(bitness):
-    constants = {}
+    constants = {
+        "CALLBACK": "__stdcall"
+    }
     if bitness == "32bit":
         constants.update({
             "_WIN32": "1",
