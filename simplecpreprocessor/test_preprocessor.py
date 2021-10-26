@@ -692,14 +692,18 @@ def test_platform():
         assert calculate_platform_constants() == {
             "_WIN32": "1",
             "__SIZE_TYPE__": "size_t",
-            "CALLBACK": "__stdcall"
+            "CALLBACK": "__stdcall",
+            "IN": "",
+            "OUT": "",
         }
 
         mock_spec.return_value = "Windows", "64bit"
         assert calculate_platform_constants() == {
             "_WIN64": "1",
             "__SIZE_TYPE__": "size_t",
-            "CALLBACK": "__stdcall"
+            "CALLBACK": "__stdcall",
+            "IN": "",
+            "OUT": "",
         }
 
         with pytest.raises(UnsupportedPlatform) as excinfo:
