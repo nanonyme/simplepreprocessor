@@ -252,9 +252,11 @@ def preprocess(f_object, line_ending="\n", include_paths=(),
     This preprocessor yields chunks of text that combined results in lines
     delimited with given line ending. There is always a final line ending.
     """
-    platform_constants = TOKEN_CONSTANTS.copy()
+    platform_constants = platform.PLATFORM_CONSTANTS.copy()
     platform_constants.update(extra_constants)
     preprocessor = Preprocessor(line_ending, include_paths, header_handler,
-                                platform_constants, ignore_headers,
-                                fold_strings_to_null)
+                                constants_to_token_constants(
+                                    platform_constants
+                                ),
+                                ignore_headers, fold_strings_to_null)
     return preprocessor.preprocess(f_object)

@@ -4,7 +4,6 @@ import ntpath
 from simplecpreprocessor import preprocess
 from simplecpreprocessor.core import Preprocessor
 from simplecpreprocessor.exceptions import ParseError, UnsupportedPlatform
-from simplecpreprocessor.tokens import Token
 from simplecpreprocessor.platform import (calculate_platform_constants,
                                           extract_platform_spec)
 from simplecpreprocessor.filesystem import FakeFile, FakeHandler
@@ -612,10 +611,7 @@ def test_no_fullfile_guard_ifndef():
 def test_platform_constants():
     f_obj = FakeFile("header.h", ['#ifdef ODDPLATFORM\n',
                                   'ODDPLATFORM\n', '#endif\n'])
-    const = {
-        "ODDPLATFORM": [Token.from_string(None, "ODDPLATFORM")]
-    }
-    ret = preprocess(f_obj, platform_constants=const)
+    ret = preprocess(f_obj, extra_constants={"ODDPLATFORM": "ODDPLATFORM"})
     assert "".join(ret) == "ODDPLATFORM\n"
 
 
