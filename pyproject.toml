@@ -1,20 +1,23 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
-[tool.flit.metadata]
-module = "simplecpreprocessor"
-author = "Seppo Yli-Olli"
-author-email = "seppo.yli-olli@iki.fi"
-home-page = "https://github.com/nanonyme/simplecpreprocessor"
-classifiers = ["License :: OSI Approved :: MIT License"]
-description-file = "README.md"
+[project]
+name = "simplecpreprocessor"
+authors = [
+    {name = "Seppo Yli-Olli", email = "seppo.yli-olli@iki.fi"}
+]
+readme = "README.md"
+classifiers = [
+    "License :: OSI Approved :: MIT License"
+]
 requires-python = ">=3.7"
+dynamic = ["version", "description"]
 
-[tool.flit.scripts]
+[project.scripts]
 simplecpreprocessor = "simplecpreprocessor.__main__:main"
 
-[tool.flit.metadata.requires-extra]
+[project.optional-dependencies]
 test = [
     "pytest>=3.6",
     "flake8",
