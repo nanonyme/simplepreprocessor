@@ -1,7 +1,7 @@
 name: Test build
 on: [pull_request]
 jobs:
-  Application-Build:
+  Application-Test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
