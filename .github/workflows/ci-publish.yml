@@ -4,11 +4,8 @@ on:
     tags:
       - v*
 jobs:
-  Application-Release:
+  Application-Build:
     runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions/prepare-build
@@ -16,5 +13,20 @@ jobs:
         VERSION=$(git describe --tags)
         echo "__version__ = \"$VERSION\"" > simplecpreprocessor/version.py
         flit build
+    - uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist
+
+  Application-Release:
+    runs-on: ubuntu-latest
+    needs: [Application-Build]
+    environment: pypi
+    permissions:
+      id-token: write
+    - uses: actions/download-artifact@v3
+      with:
+        name: dist
+        path: dist
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
