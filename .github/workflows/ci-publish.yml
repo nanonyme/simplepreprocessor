@@ -6,6 +6,9 @@ on:
 jobs:
   Application-Release:
     runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
     steps:
     - uses: actions/checkout@v2
     - uses: ./.github/actions/prepare-build
@@ -13,8 +16,5 @@ jobs:
         VERSION=$(git describe --tags)
         echo "__version__ = \"$VERSION\"" > simplecpreprocessor/version.py
         flit build
-    - run: |
-        flit publish
-      env:
-        FLIT_USERNAME: ${{ secrets.FLIT_USERNAME }}
-        FLIT_PASSWORD: ${{ secrets.FLIT_PASSWORD }}
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
